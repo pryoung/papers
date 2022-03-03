@@ -41,14 +41,18 @@ p=plot_eis_venus_ints()
 
 The slot sequences beginning at 06/03:23 and 06/05:01 began during orbital twilight and so the intensities are suppressed. This was corrected by using a uniform intensity area of the slot raster maps and then comparing the intensity in the early rasters with those of the later rasters. Correction factors were obtained with the routine eis_eclipse_raster. The corrections only apply to the first two files in the sequence.
 
-06/03:23
+### 06/03:23
+```
 file=eis_find_file('6-jun-2012 03:30',/lev,/seq)
 eis_eclipse_scale,file,yrange=[300,370]
 File:  0   Ratios:      0.812     0.272
 File:  1   Ratios:      0.983     0.965
+```
 
-06/05:01
+### 06/05:01
+```
 file=eis_find_file('6-jun-2012 05:10',/lev,/seq)
 eis_eclipse_scale,file,yrange=[270,320]
 File:  0   Ratios:      0.704     0.139
 File:  1   Ratios:      0.975     0.929
+```
