@@ -36,9 +36,9 @@ p=plot_eis_venus_ints()
 ```
 
 
-```
-Orbital twilight corrections
-```
+
+## Orbital twilight corrections
+
 The slot sequences beginning at 06/03:23 and 06/05:01 began during orbital twilight and so the intensities are suppressed. This was corrected by using a uniform intensity area of the slot raster maps and then comparing the intensity in the early rasters with those of the later rasters. Correction factors were obtained with the routine eis_eclipse_raster. The corrections only apply to the first two files in the sequence.
 
 06/03:23

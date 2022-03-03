@@ -40,6 +40,9 @@ FUNCTION read_eis_venus_results, quiet=quiet
 ;     Ver.3, 28-Feb-2022, Peter Young
 ;        I switched to using eis_venus_select to get the Venus
 ;        intensities, and so this routine reads these results.
+;     Ver.4, 01-Mar-2022, Peter Young
+;        Reduced intensities by 14% following Young & Ugarte-Urra
+;        (2022) recommendation.
 ;-
 
 
@@ -48,8 +51,12 @@ openr,lin,'eis_venus_new_results.txt',/get_lun
 str={time: '', x: 0., y: 0., int_all: 0., int_dark: 0., ann_int: 0., ann_frac: 0. }
 junk=temporary(data)
 
-
-calib_factor=eis_recalibrate_intensity('5-Jun-2012 23:00',195.12,1)
+;
+; Here I get the calibration factor from Warren et al. (2014), and
+; then I reduce the intensity by 14% as recommended by Young &
+; Ugarte-Urra (2022).
+;
+calib_factor=eis_recalibrate_intensity('5-Jun-2012 23:00',195.12,1)*0.86
 
 WHILE eof(lin) NE 1 DO BEGIN
    readf,lin,format='(a8,2f6.0,4f7.0)',str
