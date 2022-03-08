@@ -49,3 +49,18 @@ IDL> w=plot_slit_slot_intensities_v2()
 ```
 IDL> w=plot_synop001_background_v2()
 ```
+
+### Data
+
+The data files derived from the analysis are:
+
+fit_195_20210920_1314.save - single Gaussian fits to Fe XII 195 used for Figure 5 (derived using eis_auto_fit).
+
+fit_pos_1080.save - fits to the Fe XII 195 slot data used for Figure 4.
+
+fit_9may07_dataset.save - fits to the Fe XII 195 slit and slot data used for Figure 5. The routine fit_9may07_dataset.pro creates this file.
+
+synop001_slit_template_195.save - contains the template and wvl_select structures that are used for the single-Gaussian fit call to eis_auto_fit for the SYNOP001 datasets.
+
+slit_slot_intensities/*.save - one-Gaussian fit data and slot intensity data for all SYNOP001 datasets in May 2007. Created with get_slit_slot_intensities.pro.
+
