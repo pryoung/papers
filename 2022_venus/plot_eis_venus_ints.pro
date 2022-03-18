@@ -51,11 +51,13 @@ extra={ thick: th, $
         font_size: fs, $
         yminor: 4}
 
+ann_frac_lim=0.75
+
 i_in=where(r LT 960.)
 i_out=where(r GE 960.)
 
-i_cross=where(r LT 960. AND d.ann_frac GE 0.7)
-i_tri=where(r LT 960. AND d.ann_frac LT 0.7)
+i_cross=where(r LT 960. AND d.ann_frac GE ann_frac_lim)
+i_tri=where(r LT 960. AND d.ann_frac LT ann_frac_lim)
 i_circle=where(r GE 960.)
 
 p=plot(/current,d[i_cross].x,d[i_cross].int_venus,symbol='+', $
@@ -80,8 +82,8 @@ tp=text(/data,xp,yp,'(a)',font_size=fs+2)
 
 ;-----------------------------------------
 ;
-i_cross=where(r LT 960. AND d.ann_frac GE 0.7)
-i_tri=where(r LT 960. AND d.ann_frac LT 0.7)
+i_cross=where(r LT 960. AND d.ann_frac GE ann_frac_lim)
+i_tri=where(r LT 960. AND d.ann_frac LT ann_frac_lim)
 i_circle=where(r GE 960.)
 
 q=plot(/current,pos=[x0+dx+ddx,y0,x0+2*dx,y1], $
@@ -100,7 +102,7 @@ q3=plot(/overplot,abs(d[i_circle].int_ann),d[i_circle].int_venus, $
 
 
 ;c=linfit(abs(d[i_in].int_ann),d[i_in].int_venus)
-c=linfit(abs(d[i_cross].int_ann),d[i_cross].int_venus)
+c=linfit(abs(d[i_cross].int_ann),d[i_cross].int_venus,yfit=yfit)
 x=findgen(61)*10.
 q2=plot(/overplot,_extra=extra,x,c[0]+c[1]*x, $
         color=color_toi(/vibrant,'blue'))
@@ -109,6 +111,13 @@ print,'EIS linear fit parameters: '
 print,format='("      c[0] = ",f6.2)',c[0]
 print,format='("      c[1] = ",f8.4)',c[1]
 
+;
+; Check differences between fit and Venus intensities
+;
+diff=yfit-d[i_cross].int_venus
+perc_diff=diff/d[i_cross].int_venus*100.
+print,format='("Max difference (fit - Venus_int): ",f4.1,"%")',max(abs(perc_diff))
+print,format='("Standard deviation (fit - Venus_int): ",f4.1,"%")',stdev(perc_diff)
 ;
 ; I set the c[0] value for the AIA line to be the same as EIS.
 ;
