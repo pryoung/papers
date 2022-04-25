@@ -56,3 +56,13 @@ eis_eclipse_scale,file,yrange=[270,320]
 File:  0   Ratios:      0.704     0.139
 File:  1   Ratios:      0.975     0.929
 ```
+
+## Figures
+
+### Figure 7 - plot_aia_ann_rad_comparison.png
+
+This is a 2x2 panel plot showing the effect of varying the annulus radius.
+
+```
+w=plot_aia_ann_rad_comparison()
+```
