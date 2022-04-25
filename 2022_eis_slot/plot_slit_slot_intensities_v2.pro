@@ -1,12 +1,30 @@
 
-FUNCTION plot_slit_slot_intensities_v2
+FUNCTION plot_slit_slot_intensities_v2, wvl=wvl, bg_left=bg_left, bg_right=bg_right
 
 ;+
 ;   This produces Figure 6 for the paper.
+;
+; OPTIONAL INPUTS:
+;      Wvl:   Wavelength to process (angstroms). Default is 195.12.
+;
+; KEYWORD PARAMETERS:
+;      Bg_Left:  Only use background on left side of slot. Default is
+;                to average left and right sides.
+;      Bg_Right: Only use background on right side of slot. Default is
+;                to average left and right sides.
 ;-
 
 
-list=file_search('slit_slot_intensities','*.save')
+IF n_elements(wvl) EQ 0 THEN BEGIN
+  wvl=195.12
+  outdir='slit_slot_intensities'
+  wvl_str=trim(floor(wvl))
+ENDIF ELSE BEGIN
+  wvl_str=trim(floor(wvl))
+  outdir='slit_slot_intensities_'+wvl_str
+ENDELSE 
+
+list=file_search(outdir,'*.save')
 n=n_elements(list)
 
 
@@ -26,11 +44,21 @@ all_ints=-1.
 
 file_count=0
 
+
 FOR i=0,n-1 DO BEGIN
   restore,list[i]
   IF fmirr_slit EQ fmirr_slot AND yws_slit EQ yws_slot AND flag[i] NE 1 THEN BEGIN 
     int=eis_get_fitdata(fit)
-    ratio1=(int3-bg)/int
+   ;
+   ; Get slot background
+   ;
+    CASE 1 OF
+      keyword_set(bg_left): bkgd=bg1
+      keyword_set(bg_right): bkgd=bg2
+      ELSE: bkgd=bg
+    ENDCASE
+   ;
+    ratio1=(int3-bkgd)/int
     ratio2=int3/int
     k=where(int1 GE 2740 OR int EQ -100,nk)
     IF nk NE 0 THEN BEGIN
@@ -106,7 +134,11 @@ m1=mean(all_ratios1[k])
 s1=stdev(all_ratios1[k])
 print,format='("Mean for bg-subtracted data: ",f7.3," +/-",f7.3)',m1,s1
 
-k=where(all_ratios1 NE -100.,nk)
+;
+; I've added int > 0 as I found an example where int was 0
+; (causing an Inf in calculation).
+;
+k=where(all_ratios1 NE -100. AND int GT 0.,nk)
 m1a=mean(all_ratios1[k])
 s1a=stdev(all_ratios1[k])
 print,format='("Mean for bg-subtracted data (all): ",f7.3," +/-",f7.3)',m1a,s1a
@@ -135,8 +167,8 @@ ql=plot(/overplot,q.xrange,[1,1])
 ql2=plot(/overplot,color='dodger blue',th=2,[q.xrange[0],q.xrange[1]],m1a*[1,1])
 qt=text(1.1,2.3,/data,'(b) Background subtracted',font_size=fs+2,target=q)
 
-
-w.save,'plot_slit_slot_intensities_v2.png',width=xdim
+outfile='plot_slit_slot_intensities_v2_'+wvl_str+'.png'
+w.save,outfile,width=xdim
 
 
 print,'Total number of files used: ',file_count

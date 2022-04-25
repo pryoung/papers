@@ -1,12 +1,58 @@
 
-PRO get_slit_slot_intensities, output
+PRO get_slit_slot_intensities, output, wvl=wvl, n_limit=n_limit
 
-;
-; This goes through all the slit-slot pairs, fits the narrow slit 195
-; line, and extracts the intensity for the slot line.
-;
 
-outdir='slit_slot_intensities'
+;+
+; NAME:
+;     GET_SLIT_SLOT_INTENSITIES
+;
+; PURPOSE:
+;     This goes through all the SYNOP001 slit-slot pairs, fits the
+;     narrow slit 195 line, and extracts the intensity for the slot
+;     line. 
+;
+; CATEGORY:
+;     Hinode; EIS; slit; slot.
+;
+; CALLING SEQUENCE:
+;     GET_SLIT_SLOT_INTENSITIES, Output
+;
+; INPUTS:
+;     None.
+;
+; OPTIONAL INPUTS:
+;     Wvl:   By default the routine processes Fe XII 195.12. Use WVL
+;            to specify a different wavelength (make sure to give a
+;            precise wavelength).
+;     N_Limit: 
+;	
+; OUTPUTS:
+;     The routine writes the intensity data for each file to the
+;     directory 'slit_slot_intensities'. (If a different wavelength is
+;     specified, then '_WVL' is added to the directory.)
+;
+;
+; OPTIONAL OUTPUTS:
+;     A structure with the following tags:
+;      .slit_dobs  DATE_OBS of slit raster.
+;      .slot_dobs  DATE_OBS of slot raster.
+
+; MODIFICATION HISTORY:
+;     Ver.2, 31-Mar-2022, Peter Young
+;       Added WVL= optional input.
+;-
+
+
+
+IF n_elements(wvl) EQ 0 THEN BEGIN
+  wvl=195.12
+  outdir='slit_slot_intensities'
+  wvl_str=trim(floor(wvl))
+ENDIF ELSE BEGIN
+  wvl_str=trim(floor(wvl))
+  outdir='slit_slot_intensities_'+wvl_str
+ENDELSE 
+ 
 chck=file_info(outdir)
 IF chck.directory EQ 0 THEN file_mkdir,outdir
 chck=file_search(outdir,'*.save',count=count)
@@ -32,7 +78,16 @@ ENDFOR
 
 n=n_elements(output)
 
-restore,'synop001_slit_template_195.save'
+template_file='synop001_slit_template_'+wvl_str+'.save'
+chck=file_info(template_file)
+IF chck.exists EQ 0 THEN BEGIN
+  print,'% GET_SLIT_SLOT_INTENSITIES: The fit template file does not exist. Returning...'
+  return
+ENDIF 
+restore,template_file
+
+
+IF n_elements(n_limit) NE 0 THEN n=n_limit
 
 FOR i=0,n-1 DO BEGIN
   file2=eis_find_file(output[i].slit_dobs,twindow=5.,count=count,/lev)
@@ -45,13 +100,13 @@ FOR i=0,n-1 DO BEGIN
   fmirr_slit=fmirr[0]
   obj_destroy,d
  ;
-  wd=eis_getwindata(file2,195.12,/refill)
+  wd=eis_getwindata(file2,wvl,/refill)
  ;
  ; The 2007-05-04T06:25:19 dataset has an error array of all-zeros for
  ; some reason.
  ;
   IF max(wd.err[*,0,*,0]) EQ 0. THEN continue
-  wdx=eis_trim_windata(wd,[194.62,195.62])
+  wdx=eis_trim_windata(wd,wvl+[-0.5,0.5])
   yws_slit=wd.hdr.yws
   eis_auto_fit,wdx,fit,template=template,wvl_select=wvl_select,/quiet,iexp=0
  ;
@@ -66,7 +121,7 @@ FOR i=0,n-1 DO BEGIN
   fmirr_slot=fmirr[0]
   obj_destroy,d
  ;
-  wd=eis_getwindata(file1,195.12)
+  wd=eis_getwindata(file1,wvl)
   getmin=min(abs(wd.wvl-wvl_fit),imin)
 
   ny=wd.ny
@@ -74,7 +129,7 @@ FOR i=0,n-1 DO BEGIN
   d_ang=eis_slit_slot_offset(ypix,date=output[i].slot_dobs)
   d_pix=round(d_ang/(wd.wvl[imin+1]-wd.wvl[imin]))
   
-  scl=eis_slot_calib_factor(wavel=195.12,exptime=wd.exposure_time[0])
+  scl=eis_slot_calib_factor(wavel=wvl,exptime=wd.exposure_time[0])
   int1=reform(wd.int[imin,0,*,0])*scl
   int3=average(reform(wd.int[imin-1:imin+1,0,*,0]),1,missing=wd.missing)*scl
   int5=average(reform(wd.int[imin-2:imin+2,0,*,0]),1,missing=wd.missing)*scl
