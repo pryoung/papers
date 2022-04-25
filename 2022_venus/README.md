@@ -3,9 +3,13 @@
 
 This repository contains files used for data analysis and generating figures. All software are written in IDL. The EIS and AIA Solarsoft libraries are required.
 
+## AIA data analysis
+
+The key routine is `aia_get_venus.pro`.
+
 ## EIS data analysis
 
-The routine eis_venus_select.pro was written to derive the Fe XII 195.12 intensity at the center of the Venus shadow. The procedure for running this routine is indicated in the example below:
+The routine `eis_venus_select.pro` was written to derive the Fe XII 195.12 intensity at the center of the Venus shadow. The procedure for running this routine is indicated in the example below:
 
 ```
 file=eis_find_file('5-jun-2012 23:00',/lev,/seq)
@@ -65,4 +69,43 @@ This is a 2x2 panel plot showing the effect of varying the annulus radius.
 
 ```
 w=plot_aia_ann_rad_comparison()
+```
+
+## AIA files
+
+The following is the list of 32 AIA 193 files that were used for the AIA analysis. They can be downloaded from the JSOC of VSO. In order to use the routine `aia_get_venus` you should put these files in the sub-directory `/aia`.
+
+```
+aia.lev1.193A_2012-06-05T21_00_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-05T21_20_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-05T21_40_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-05T21_50_31.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-05T22_00_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-05T22_20_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-05T22_40_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-05T23_00_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-05T23_20_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-05T23_40_01.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T00_00_01.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T00_20_01.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T00_40_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T01_00_55.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T01_20_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T01_40_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T02_00_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T02_20_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T02_40_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T03_00_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T03_20_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T03_40_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T03_50_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T04_00_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T04_10_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T04_15_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T04_20_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T04_40_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T04_50_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T05_00_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T05_20_07.84Z.image_lev1.fits
+aia.lev1.193A_2012-06-06T05_40_07.84Z.image_lev1.fits
 ```
