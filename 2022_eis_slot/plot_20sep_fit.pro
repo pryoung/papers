@@ -10,15 +10,22 @@ FUNCTION plot_20sep_fit, data, ypix, _extra=extra
 ;   at one y-pixel. It is Figure 3 in the slot paper.
 ;
 ;   DATA and YPIX are optional outputs.
+;
+; PRY, 26-Apr-2022: added some comments.
 ;-
 
+;
+; This file contains the structures S1 and S2 that are the fits to the slot
+; intensity for the bottom and top of the slot. I only use S2 here.
+;
 restore,'fit_pos_1080.save'
 
+;
+; Extract properties for the specified y-pixel.
+;
 iy=19
-
-
+;
 img=s2.int
-
 int=s2.int[*,iy]
 err=s2.err[*,iy]
 wvl=s2.wvl
