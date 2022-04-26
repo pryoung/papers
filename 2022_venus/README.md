@@ -5,7 +5,19 @@ This repository contains files used for data analysis and generating figures. Al
 
 ## AIA data analysis
 
-The key routine is `aia_get_venus.pro`.
+The key routine is `aia_get_venus.pro`. This takes the set of full-disk AIA images (see below for the full list of files used in the paper). For each one, a sub-image around Venus is displayed in a graphics window. The user clicks on the approximate center of Venus in the image. The next image is then shown, and the user again clicks on the center. This is repeated for the full set of images and an IDL structure is output.
+
+````
+r=aia_get_venus()
+````
+
+The file `aia_venus_results.save` contains several structures created with `aia_get_venus`. For example, `d050` contains the results for using an outer annulus radius of 50 arcsec and for the set of 26 images at 20 min cadence. `d050x` is the same, but for the extended series of 32 images (see paper for more details). `d100` uses an outer radius of 100 arcsec.
+
+If you have already created a structure and you want to modify the outer radius (for example), then you can send the previous structure as an input to avoid manually selecting the Venus positions.
+
+````
+r=aia_get_venus(radius=100,data=d050)
+````
 
 ## EIS data analysis
 
