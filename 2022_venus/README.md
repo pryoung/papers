@@ -75,6 +75,54 @@ File:  1   Ratios:      0.975     0.929
 
 ## Figures
 
+### Figure 1 - plot_aia_venus.png
+
+Shows track of Venus on AIA 193 image.
+
+````
+w=plot_aia_venus()
+````
+
+### Figure 2 - plot_aia_venus_ints.png
+
+Two-panel plot showing variation of AIA Venus intensity during transit and relation to annulus intensity.
+
+````
+w=plot_aia_venus_ints()
+````
+
+### Figure 3 - plot_aia_20161123.png
+
+Shows AIA sub-image for a coronal hole.
+
+````
+w=plot_aia_20161123()
+````
+
+### Figure 4 - plot_eis_image.png
+
+Two panel plot showing slot raster image of Venus (left) and close-up of the Venus exposure (right).
+
+````
+w=plot_eis_image()
+````
+
+### Figure 5 - plot_eis_venus_ints.png
+
+Two panel plot similar to Figure 2, but for EIS.
+
+````
+w=plot_eis_venus_ints()
+````
+
+### Figure 6 - plot_20161123_regions.png
+
+Shows an EIS raster with locations used for coronal hole and quiet Sun.
+
+````
+w=plot_20161123_regions()
+````
+
 ### Figure 7 - plot_aia_ann_rad_comparison.png
 
 This is a 2x2 panel plot showing the effect of varying the annulus radius.
