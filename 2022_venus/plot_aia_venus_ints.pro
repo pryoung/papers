@@ -93,7 +93,7 @@ i_out_1=where(d050x.r GE 960. AND swtch EQ 1)
 p=plot(/current,d050x[i_in_0].x,d050x[i_in_0].int,symbol='+', $
        _extra=extra, $
        xtitle='Solar-X / arcsec', $
-       ytitle='$D_{\rm V}$ / DN s!u-1!n', $
+       ytitle='$D_{\rm V}$ / DN s!u-1!n pix!u-1!n', $
        pos=[x0+ddx,y0,x0+dx,y1],linestyle='none', $
        xrange=[-1300,1300],/xsty, $
        yrange=[0,60])
@@ -129,7 +129,8 @@ q=plot(/current,d050x[i_in_0].sub_map_int,d050x[i_in_0].int,symbol='+', $
        yrange=[0,60], $
        _extra=extra,linestyle='none', $
        pos=[x0+dx+ddx,y0,x0+2*dx,y1] , $
-       xtitle='$D_{\rm ann}$ / DN s!u-1!n',ytitle='$D_{\rm V}$ / DN s!u-1!n' , $
+       xtitle='$D_{\rm ann}$ / DN s!u-1!n pix!u-1!n', $
+       ytitle='$D_{\rm V}$ / DN s!u-1!n pix!u-1!n' , $
        xminor=4)
 q2=plot(/current,/overplot,d050x[i_in_1].sub_map_int,d050x[i_in_1].int,symbol='x', $
         _extra=extra,linestyle='none')
