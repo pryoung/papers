@@ -1,6 +1,7 @@
 
 FUNCTION  eis_get_annulus_int, tt, radius=radius, no_bg=no_bg, pos=pos, map=map, $
-                               pix_frac=pix_frac, file=file, int_scale=int_scale
+                               pix_frac=pix_frac, file=file, int_scale=int_scale, $
+                               wvl=wvl, stdev=stdev
 
 ;+
 ; NAME:
@@ -28,6 +29,8 @@ FUNCTION  eis_get_annulus_int, tt, radius=radius, no_bg=no_bg, pos=pos, map=map,
 ;             EIS filename with this keyword.
 ;      Int_Scale: Array used for scaling the individual exposure
 ;                 intensities. See eis_slot_map for more details.
+;      Wvl:  Specifies the wavelength for which to form the annulus
+;            image. If not specified, then 195.12 is assumed.
 ;
 ; KEYWORD PARAMETERS:
 ;      NO_BG:  If set, then no background subtraction is performed
@@ -39,7 +42,9 @@ FUNCTION  eis_get_annulus_int, tt, radius=radius, no_bg=no_bg, pos=pos, map=map,
 ; OPTIONAL OUTPUTS:
 ;      MAP:  An IDL map containing the annulus image.
 ;      PIX_FRAC:  A float giving the fraction of pixels in the
-;                 returned annulus compared to the maximum possible. 
+;                 returned annulus compared to the maximum possible.
+;      STDEV:  Returns the standard deviation of the intensities in
+;              the annulus.
 ;
 ; MODIFICATION HISTORY:
 ;      Ver.1, 5-May-2020, Peter Young
@@ -51,6 +56,10 @@ FUNCTION  eis_get_annulus_int, tt, radius=radius, no_bg=no_bg, pos=pos, map=map,
 ;         Major overhaul; now a function.
 ;      Ver.4, 28-Feb-2022, Peter Young
 ;         Added int_scale optional input.
+;      Ver.5, 31-May-2022, Peter Young
+;         Added wvl= optional input.
+;      Ver.6, 12-Jun-2022, Peter Young
+;         Added stdev= optional output.
 ;-
 
 IF n_elements(file) NE 0 THEN BEGIN
@@ -67,12 +76,15 @@ ENDIF ELSE BEGIN
     tt_full='6-jun-2012 '+tt
   ENDELSE 
 
-file=eis_find_file(tt_full,/lev,count=count,twindow=300.,/backwards)
+  file=eis_find_file(tt_full,/lev,count=count,twindow=300.,/backwards)
 ENDELSE
+
+
+IF n_elements(wvl) EQ 0 THEN wvl=195.12
 
 bg48=1b-keyword_set(no_bg)
 
-smap=eis_slot_map(file,195.12,bg48=bg48,int_scale=int_scale,/quiet)
+smap=eis_slot_map(file,wvl,bg48=bg48,int_scale=int_scale,/quiet)
 
 IF n_elements(radius) EQ 0 THEN radius=50.
 
@@ -101,6 +113,7 @@ r_arr=sqrt( (v_ix-x_arr)^2 + (v_iy-y_arr)^2 )
 k=where(r_arr GT 30./smap.dx AND r_arr LE radius/smap.dx)
 
 int_ann=average(smap.data[k])
+stdev=stdev(smap.data[k])
 
 missing=-100.
 

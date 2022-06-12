@@ -1,4 +1,4 @@
-FUNCTION read_eis_venus_results, quiet=quiet
+FUNCTION read_eis_venus_results, file, wvl, quiet=quiet
 
 ;+
 ; NAME:
@@ -11,11 +11,15 @@ FUNCTION read_eis_venus_results, quiet=quiet
 ;     Hinode/EIS; Venus transit; file i/o.
 ;
 ; CALLING SEQUENCE:
-;     Result = READ_EIS_VENUS_RESULTS( )
+;     Result = READ_EIS_VENUS_RESULTS( File, Wvl )
 ;
 ; INPUTS:
-;     None.
+;     File:  Name of the data file to be read. If not specified,
+;            then 'eis_venus_new_results.txt' will be used.
+;     Wvl:   Specifies the wavelength to which the results apply.
 ;
+; OPTIONAL INPUTS:
+
 ; OUTPUTS:
 ;     Returns an IDL structure with the following tags:
 ;      .time  Observation time.
@@ -30,7 +34,7 @@ FUNCTION read_eis_venus_results, quiet=quiet
 ;                Warren et al. (2014) radiometric calibration.
 ;
 ; EXAMPLE:
-;     IDL> data=read_eis_venus_results()
+;     IDL> data=read_eis_venus_results('results_195.txt',195.12)
 ;
 ; MODIFICATION HISTORY:
 ;     Ver.1, 07-Oct-2020, Peter Young
@@ -43,12 +47,30 @@ FUNCTION read_eis_venus_results, quiet=quiet
 ;     Ver.4, 01-Mar-2022, Peter Young
 ;        Reduced intensities by 14% following Young & Ugarte-Urra
 ;        (2022) recommendation.
+;     Ver.5, 31-May-2022, Peter Young
+;        Added file= optional input.
+;     Ver.6, 12-Jun-2022, Peter Young
+;        Updated to read new format (with error bars); now requires
+;        WVL and FILE inputs.
 ;-
 
 
-openr,lin,'eis_venus_new_results.txt',/get_lun
+IF n_params() LT 2 THEN BEGIN
+  print,'Use:  IDL> results=read_eis_venus_results( File, Wvl [, /quiet] )'
+  return,-1
+ENDIF 
 
-str={time: '', x: 0., y: 0., int_all: 0., int_dark: 0., ann_int: 0., ann_frac: 0. }
+chck=file_info(file)
+IF chck.exists EQ 0 THEN BEGIN
+  message,/info,/cont,'The data file does not exist. Returning...'
+  return,-1
+ENDIF 
+
+openr,lin,file,/get_lun
+
+str={time: '', x: 0., y: 0., int_all: 0., int_all_sig: 0., $
+     int_dark: 0., int_dark_sig: 0., $
+     ann_int: 0., ann_int_sig: 0., ann_frac: 0. }
 junk=temporary(data)
 
 ;
@@ -56,19 +78,16 @@ junk=temporary(data)
 ; then I reduce the intensity by 14% as recommended by Young &
 ; Ugarte-Urra (2022).
 ;
-calib_factor=eis_recalibrate_intensity('5-Jun-2012 23:00',195.12,1)*0.86
+calib_factor=eis_recalibrate_intensity('5-Jun-2012 23:00',wvl,1)*0.86
 
 WHILE eof(lin) NE 1 DO BEGIN
-   readf,lin,format='(a8,2f6.0,4f7.0)',str
+   readf,lin,format='(a8,2f6.0,3(f7.0,4x,f7.0),f7.0)',str
   ;
    IF n_tags(data) EQ 0 THEN data=str ELSE data=[data,str]
 ENDWHILE 
 
 free_lun,lin
 
-
-;IF NOT keyword_set(quiet) THEN print,'% READ_EIS_VENUS_RESULTS: removed dark current from annulus intensity.'
-;IF NOT keyword_set(quiet) THEN print,'% READ_EIS_VENUS_RESULTS: corrected intensites with Warren et al. (2014) calibration.'
 
 
 n=n_elements(data)
@@ -78,14 +97,17 @@ FOR i=0,n-1 DO BEGIN
 ENDFOR 
 
 
-str2={time: '', x: 0., y: 0., int_venus: 0., int_ann: 0., ann_frac: 0. }
+str2={time: '', x: 0., y: 0., int_venus: 0., int_venus_sig: 0., $
+      int_ann: 0., int_ann_sig: 0., ann_frac: 0. }
 output=replicate(str2,n)
 output.time=data.time
 output.x=data.x
 output.y=data.y
 output.ann_frac=data.ann_frac
 output.int_venus=(data.int_all-data.int_dark)*calib_factor
+output.int_venus_sig=sqrt( data.int_all_sig^2 + data.int_dark_sig^2 )*calib_factor
 output.int_ann=data.ann_int*calib_factor
+output.int_ann_sig=data.ann_int_sig*calib_factor
 
 
 return,output
