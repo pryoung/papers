@@ -1,11 +1,11 @@
 
-## A Spectroscopic Measurement of High Velocity Spray Plasma from an M-class Flare
+## A Spectroscopic Measurement of High Velocity Spray Plasma from an M-class Flare and Coronal Mass Ejection
 
 ## Journal: Advances in Space Research
 
 ## Author: Peter R. Young
 
-This directory contains files for the paper "A Spectroscopic Measurement of High Velocity Spray Plasma from an M-class Flare" that has been submitted to Advances in Space Research.
+This directory contains files for the paper "A Spectroscopic Measurement of High Velocity Spray Plasma from an M-class Flare and Coronal Mass Ejection" that has been submitted to Advances in Space Research.
 
 ### Figures
 
@@ -19,12 +19,12 @@ The AIA images are provided in the GitHub repository.
 IDL> w=plot_aia_6_panel()
 ```
 
-#### Figure 2 (plot_spray_6_panel)
+#### Figure 2 (plot_spray_6_panel_v2)
 
 You will need to download the EIS file and calibrate it with eis_prep. 
 
 ```
-IDL> w=plot_spray_6_panel()
+IDL> w=plot_spray_6_panel_v2()
 ```
 
 #### Figure 3 (plot_fe12_1g_redshift.png)
