@@ -46,6 +46,8 @@ FUNCTION plot_aia_venus_ints, no_psf=no_psf, quadratic=quadratic
 ;     Ver.1, 05-Oct-2020, Peter Young
 ;     Ver.2, 26-Apr-2022, Peter Young
 ;       Updated dimensions of output plot.
+;     Ver.3, 29-Jun-2022, Peter Young
+;       Added intensity uncertainties from d050x_err structure.
 ;-
 
 
@@ -125,13 +127,22 @@ i_out=where(d050x.r GE 960.)
 i_out_0=where(d050x.r GE 960. AND swtch EQ 0)
 i_out_1=where(d050x.r GE 960. AND swtch EQ 1)
 
-q=plot(/current,d050x[i_in_0].sub_map_int,d050x[i_in_0].int,symbol='+', $
-       yrange=[0,60], $
-       _extra=extra,linestyle='none', $
-       pos=[x0+dx+ddx,y0,x0+2*dx,y1] , $
-       xtitle='$D_{\rm ann}$ / DN s!u-1!n pix!u-1!n', $
-       ytitle='$D_{\rm V}$ / DN s!u-1!n pix!u-1!n' , $
-       xminor=4)
+q=errorplot(/current,d050x[i_in_0].sub_map_int, $
+            d050x[i_in_0].int,d050x_err[i_in_0].int_stdev, $
+            symbol='+', $
+            yrange=[0,60], $
+            _extra=extra,linestyle='none', $
+            pos=[x0+dx+ddx,y0,x0+2*dx,y1] , $
+            xtitle='$D_{\rm ann}$ / DN s!u-1!n pix!u-1!n', $
+            ytitle='$D_{\rm V}$ / DN s!u-1!n pix!u-1!n' , $
+            xminor=4, errorbar_th=th)
+;; q=plot(/current,d050x[i_in_0].sub_map_int,d050x[i_in_0].int,symbol='+', $
+;;        yrange=[0,60], $
+;;        _extra=extra,linestyle='none', $
+;;        pos=[x0+dx+ddx,y0,x0+2*dx,y1] , $
+;;        xtitle='$D_{\rm ann}$ / DN s!u-1!n pix!u-1!n', $
+;;        ytitle='$D_{\rm V}$ / DN s!u-1!n pix!u-1!n' , $
+;;        xminor=4)
 q2=plot(/current,/overplot,d050x[i_in_1].sub_map_int,d050x[i_in_1].int,symbol='x', $
         _extra=extra,linestyle='none')
 q1=plot(/current,/overplot,d050x[i_out_0].sub_map_int,d050x[i_out_0].int,symbol='o', $
@@ -141,12 +152,14 @@ q4=plot(/current,/overplot,d050x[i_out_1].sub_map_int,d050x[i_out_1].int,symbol=
 ;q2=plot(/overplot,d050x.sub_map_int,d050x.int,_extra=extra)
 tq=text(/data,30,54,'(b)',font_size=fs+2,target=q)
 
-c=linfit(d050x[i_in].sub_map_int,d050x[i_in].int)
+;c=linfit(d050x[i_in].sub_map_int,d050x[i_in].int)
+c=linfit(d050x[i_in].sub_map_int,d050x[i_in].int,meas=d050x_err[i_in].int_stdev, $
+         sigma=sigma)
 x=findgen(11)*50.
 q3=plot(/overplot,th=th+1,x,c[0]+c[1]*x,color=color_toi('cyan',/vibrant))
 
-print,format='("Slope:   ",f10.4)',c[1]
-print,format='("I_ann=0: ",f8.2)',c[0]
+print,format='("Slope:   ",f10.4," +/-",f10.4)',c[1],sigma[1]
+print,format='("I_ann=0: ",f8.2," +/-",f8.2)',c[0],sigma[0]
 
 ;
 ; This fits a quadratic to all of the data-points

@@ -7,6 +7,10 @@
 ;   Note that not all of the AIA images are full-disk. If the nearest
 ;   AIA image was not full-disk then I adjusted aia_time until I found
 ;   a full-disk image.
+;
+; MODIFICATION HISTORY:
+;   15-Jun-2022, Peter Young
+;     Updated int_v_0 to 11.7 from 12.2.
 ;-
 
 
@@ -76,7 +80,7 @@ eis_aia_int_compare,map,amap,bdim=bdim,aia_time=aia_time, $
 ; int_v_0 is the extrapolated Venus intensity for a zero annulus
 ; intensity. See Sect. 5 and Fig. 5 from the paper.
 ;
-int_v_0=12.2
+int_v_0=11.7
 
 beta1=output1.int_eis/output1.int_aia*output1.int_aia_fd/int_v_0
 beta2=output2.int_eis/output2.int_aia*output2.int_aia_fd/int_v_0

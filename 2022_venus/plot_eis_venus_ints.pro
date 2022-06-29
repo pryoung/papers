@@ -40,8 +40,18 @@ FUNCTION plot_eis_venus_ints, file, wvl, dv_max=dv_max, dann_max=dann_max
 ;     Ver.3, 12-Jun-2022, Peter Young
 ;        Added WVL as input and FILE is now required; now plots error
 ;        bars on panel (b).
+;     Ver.4, 15-Jun-2022, Peter Young
+;        For wavelengths other than 195, the routine now overplots the
+;        195 fit as a blue dashed line.
+;     Ver.5, 29-Jun-2022, Peter Young
+;        Updated gradient of AIA line.
 ;-
 
+
+IF n_params() LT 2 THEN BEGIN
+  print,'Use:  IDL> w=plot_eis_venus_ints( file, wvl [, dv_max=, dann_max= ] )'
+  return,-1
+ENDIF 
 
 
 d=read_eis_venus_results(file,wvl)
@@ -184,8 +194,15 @@ print,format='("Standard deviation (fit - Venus_int): ",f4.1,"%")',stdev(perc_di
 ;
 ; I set the c[0] value for the AIA line to be the same as EIS.
 ;
-q3=plot(/overplot,_extra=extra,x,c[0]+0.1014*x, $
+q3=plot(/overplot,_extra=extra,x,c[0]+0.1063*x, $
         color=color_toi(/vibrant,'magenta'),linestyle='--')
+
+; If a wavelength other than 195 is plotted, then plot the fit to the 195 line.
+;
+IF imin NE 0 THEN BEGIN
+  q4=plot(/overplot,_extra=extra,x,c[0]+0.1513*x, $
+        color=color_toi(/vibrant,'blue'),linestyle='--')
+ENDIF 
 
 xr=q.xrange
 yr=q.yrange
@@ -195,7 +212,10 @@ tp=text(/data,xp,yp,'(b)',font_size=fs+2,target=q)
 
 lbl=trim(floor(wvl))
 
-w.save,'plot_eis_venus_ints_'+lbl+'.png',resolution=2*xdim
+
+outfile='plot_eis_venus_ints_'+lbl+'.png'
+w.save,outfile,resolution=2*xdim
+message,/info,/cont,'Plot sent to the file '+outfile+'.'
 
 return,w
 

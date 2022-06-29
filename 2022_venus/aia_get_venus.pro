@@ -57,6 +57,7 @@ function aia_get_venus, quick=quick, data=data, sub_arcsec=sub_arcsec, psf=psf, 
 ;     transit. The tags are: 
 ;       .time  Time of image.
 ;       .int   The Venus intensity.
+;       .int_stdev  Standard deviation of Venus intensities.
 ;       .x     The X-position of the Venus center (arcsec).
 ;       .y     The Y-position of the Venus center (arcsec).
 ;       .r     The radial position of Venus (arcsec).
@@ -64,6 +65,7 @@ function aia_get_venus, quick=quick, data=data, sub_arcsec=sub_arcsec, psf=psf, 
 ;               AIA image.
 ;       .dark_right The dark intensity from the top-right corner of the
 ;               AIA image.
+;       .dark_stdev  Standard deviation of dark region.
 ;       .full_disk_int The full disk average intensity.
 ;       .full_disk_npix No. of pixel used to compute the average full
 ;               disk intensity.
@@ -89,7 +91,10 @@ function aia_get_venus, quick=quick, data=data, sub_arcsec=sub_arcsec, psf=psf, 
 ;     Ver.4, 07-Mar-2022, Peter Young
 ;       Introduced /previous, /next and inner_radius= (used to
 ;       investigate effect of reducing the inner radius of the
-;       annulus). 
+;       annulus).
+;     Ver.5, 29-Jun-2022, Peter Young
+;       Added calculation of int_stdev and dark_stdev, which have
+;       been added to output structure.
 ;-
 
 
@@ -161,22 +166,27 @@ IF n_tags(data) NE 0 THEN BEGIN
     ENDELSE
     count=n
   ENDFOR 
-  
-  output=data
-ENDIF ELSE BEGIN 
-  str={time: '', $
-       int: 0., $
-       x: 0., $
-       y: 0., $
-       r: 0., $
-       dark_left: 0., $
-       dark_right: 0., $
-       full_disk_int: 0., $
-       full_disk_npix: 0l, $
-       sub_map_int: 0.}
-  output=replicate(str,count)
-  data_files=list
-ENDELSE 
+ENDIF 
+
+str={time: '', $
+     int: 0., $
+     int_stdev: 0., $
+     x: 0., $
+     y: 0., $
+     r: 0., $
+     dark_left: 0., $
+     dark_right: 0., $
+     dark_stdev: 0., $
+     full_disk_int: 0., $
+     full_disk_npix: 0l, $
+     sub_map_int: 0.}
+output=replicate(str,count)
+
+IF n_tags(data) NE 0 THEN BEGIN
+  output.time=data.time
+  output.x=data.x
+ENDIF 
+
 
 nb=16
 
@@ -202,6 +212,15 @@ FOR i=i0,i1 DO BEGIN
  ;
   output[i].dark_left=median(map.data[0:99,3996:4095])
   output[i].dark_right=median(map.data[3996:4095,3996:4095])
+ ;
+ ; Below I pick out a box in the bottom-left corner that is the same
+ ; size as that used for the Venus intensity. I consider the standard
+ ; deviation of the intensities in this box to be an estimate of the
+ ; uncertainty in the dark current.
+ ;
+  dxp=30
+  dyp=30
+  output[i].dark_stdev=stdev(map.data[dxp-nb:dxp+nb,dyp-nb:dyp+nb])
  ;
   IF n_tags(data) NE 0 THEN BEGIN
     xpos=data[i].x
@@ -229,6 +248,7 @@ FOR i=i0,i1 DO BEGIN
     oplot,x+[-30,30]/0.6,y*[1,1]
     oplot,x*[1,1],y+[-30,30]/0.6
     output[i].int=mean(smap.data[x-nb:x+nb,y-nb:y+nb])
+    output[i].int_stdev=stdev(smap.data[x-nb:x+nb,y-nb:y+nb])
     output[i].time=map.time
     s=size(smap.data,/dim)
     xp=float(s[0])/2.*smap.dx
@@ -249,6 +269,11 @@ FOR i=i0,i1 DO BEGIN
     oplot,xpos*[1,1],ypos+[-30,30]
     sub_map,smap,sub_smap,xrange=xpos+[-nb,nb]*0.6,yrange=ypos+[-nb,nb]*0.6
     output[i].int=mean(sub_smap.data)
+    output[i].int_stdev=stdev(sub_smap.data)
+    output[i].time=smap.time
+    output[i].x=xpos
+    output[i].y=ypos
+    output[i].r=data[i].r
   ENDELSE
  ;
   output[i].sub_map_int=average(smap.data)
