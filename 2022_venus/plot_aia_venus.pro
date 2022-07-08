@@ -4,6 +4,13 @@ FUNCTION plot_aia_venus, reverse=reverse
 ;+
 ;   Plots an AIA 193 image from during the transit, and overplots the
 ;   track of Venus.
+;
+; MODIFICATION HISTORY:
+;     Ver.2, 30-Jun-2022, Peter Young
+;       Increased font size; updated axis labels; fixed Angstrom
+;       problem.
+;     Ver.3, 08-Jul-2022, Peter Young
+;       Now produces a jpeg instead of png (much smaller in size).
 ;-
 
 
@@ -23,7 +30,7 @@ ENDIF ELSE BEGIN
 ENDELSE 
 
 xdim=1000
-ydim=380
+ydim=400
 w=window(dim=[xdim,ydim],background_color=bgcolor)
 
 
@@ -34,22 +41,24 @@ s=size(smap.data,/dim)
 smap2=rebin_map(smap,s[0]/2,s[1]/2)
 
 th=2
-fs=10
+fs=12
 
 day=anytim2utc(/ccsds,map.time,/date)
 tt=anytim2utc(/ccsds,map.time,/time,/trunc)
 
-title='AIA 193 '+string(193b)+', '+day+' '+tt+' UT'
+title='AIA 193 '+string(197b)+', '+day+' '+tt+' UT'
 
 p=plot_map_obj(smap2,/log,dmin=20,rgb_table=aia_rgb_table(193), /current, $
                font_size=fs,xthick=th,ythick=th, $
                title='', $
-               pos=[0.06,0.10,0.98,0.98], $
+               pos=[0.07,0.10,0.99,0.98], $
                yminor=1, $
                xticklen=0.018,yticklen=0.008, $
-               xcolor=color,ycolor=color)
+               xcolor=color,ycolor=color, $
+               xtitle='solar-$x$ [ arcsec ]', $
+               ytitle='solar-$y$ [ arcsec ]')
 
-t=text(/data,-800,700,title,font_size=fs,color='white')
+t=text(/data,-890,730,title,font_size=fs,color='white')
 
 
 ;
@@ -70,7 +79,7 @@ for i=0,n-2 do begin
 endfor 
 
 
-d=read_eis_venus_results()
+d=read_eis_venus_results('results_195.txt',195.12)
 x=d.x
 y=d.y
 n=n_elements(x)
@@ -83,7 +92,7 @@ FOR i=0,n-1 DO BEGIN
 ENDFOR
 
 
-IF NOT keyword_set(reverse) THEN w.save,'plot_aia_venus.png',width=2*xdim
+IF NOT keyword_set(reverse) THEN w.save,'plot_aia_venus.jpg',width=2*xdim
 
 return,w
 

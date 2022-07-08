@@ -239,8 +239,8 @@ s3=plot(/overplot,s.xrange,s.yrange,th=th,linesty='--')
 st=text(30,450,'(d) Annulus radii: '+trim(rad1)+' & '+trim(rad2),font_size=fs,/data,target=s)
 
 
-xt=text(x0+ddx+(2*dx-ddx)/2.,0.01,align=0.5,'$D_{\rm ann}$ / DN s!u-1!n',font_size=fs+2)
-yt=text(0.03,y0+ddy+(2*dy-ddy)/2.,align=0.5,'$D*_{\rm ann}$ / DN s!u-1!n',font_size=fs+2,orient=90)
+xt=text(x0+ddx+(2*dx-ddx)/2.,0.01,align=0.5,'$D_{\rm ann}$ [ DN s!u-1!n pix!u-1!n ]',font_size=fs+2)
+yt=text(0.03,y0+ddy+(2*dy-ddy)/2.,align=0.5,'$D*_{\rm ann}$ [ DN s!u-1!n pix!u-1!n ]',font_size=fs+2,orient=90)
 
 ratio4=yy.sub_map_int/xx.sub_map_int
 

@@ -7,6 +7,12 @@ FUNCTION plot_20161123_regions
 ;  transit paper.
 ;
 ; PRY, 26-Apr-2022
+;
+; MODIFICATION HISTORY:
+;     Ver.2, 30-Jun-2022, Peter Young
+;       Updated axis labels.
+;     Ver.3, 08-Jul-2022, Peter Young
+;       Fixed problem with png output.
 ;-
 
 fitfile='20161123_0308_fit_fe12_195.save'
@@ -31,7 +37,9 @@ p=plot_map_obj(int,rgb_table=aia_rgb_table(193),/log,dmin=10, $
                xth=th,yth=th,font_size=fs, $
                pos=[0.13,0.10,0.98,0.98], $
                xmin=1,ymin=1, $
-               xticklen=0.015,yticklen=0.018,/current)
+               xticklen=0.015,yticklen=0.018,/current, $
+               xtitle='solar-x [ arcsec ]', $
+               ytitle='solar-y [ arcsec ]')
 
 x0=163
 y0=532
@@ -59,7 +67,7 @@ x=-185+[-30,30,30,-30,-30]
 y=415+[-30,-30,30,30,-30]
 b=plot(/overplot,x,y,th=2,color='white')
 
-p.save,'plot_20161123_regions.png',resolution=2.*xdim
+p.save,'plot_20161123_regions.png',width=2.*xdim
 
 return,p
 

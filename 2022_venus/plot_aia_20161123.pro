@@ -9,6 +9,10 @@ FUNCTION plot_aia_20161123
 ;  need to download the full AIA image from the JSOC.
 ;
 ; PRY, 26-Apr-2022
+;
+; MODIFICATION HISTORY:
+;     Ver.2, 30-Jun-2022, Peter Young
+;       Updated axis labels.
 ;-
 
 
@@ -38,7 +42,9 @@ p=plot_map_obj(smap,rgb_table=aia_rgb_table(193),/log,dmin=12, $
                pos=[0.14,0.11,0.98,0.98], $
                title='', $
                xticklen=0.015,yticklen=0.015,xmin=4,ymin=4, $
-               xtickdir=1,ytickdir=1,/current)
+               xtickdir=1,ytickdir=1,/current, $
+               xtitle='solar-x [ arcsec ]', $
+               ytitle='solar-y [ arcsec ]')
 
 
 x0=68.

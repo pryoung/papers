@@ -45,6 +45,10 @@ FUNCTION plot_eis_venus_ints, file, wvl, dv_max=dv_max, dann_max=dann_max
 ;        195 fit as a blue dashed line.
 ;     Ver.5, 29-Jun-2022, Peter Young
 ;        Updated gradient of AIA line.
+;     Ver.6, 30-Jun-2022, Peter Young
+;        Updated axis labels.
+;     Ver.7, 08-Jul-2022, Peter Young
+;        Fixed bug when making png file.
 ;-
 
 
@@ -116,8 +120,8 @@ i_circle=where(r GE 960.,n_circle)
 
 p=plot(/current,d[i_cross].x,d[i_cross].int_venus,symbol='+', $
        _extra=extra, $
-       xtitle='Solar-X / arcsec', $
-       ytitle='$I_{\rm V}$ / erg cm!u-2!n s!u-1!n sr!u-1!n', $
+       xtitle='solar-X [ arcsec ]', $
+       ytitle='$I_{\rm V}$ [ erg cm!u-2!n s!u-1!n sr!u-1!n ]', $
        pos=[x0+ddx,y0,x0+dx,y1],linestyle='none', $
        xrange=[-1300,1300],/xsty, $
        yrange=[0,dv_max])
@@ -155,8 +159,8 @@ i_circle=where(r GE 960.,n_circle)
 q=errorplot(/current,pos=[x0+dx+ddx,y0,x0+2*dx,y1], $
             d[i_cross].int_ann,d[i_cross].int_venus,d[i_cross].int_venus_sig,symbol='+', $
             _extra=extra, $
-            xtitle='$I_{\rm ann}$ / erg cm!u-2!n s!u-1!n sr!u-1!n', $
-            ytitle='$I_{\rm V}$ / erg cm!u-2!n s!u-1!n sr!u-1!n', $
+            xtitle='$I_{\rm ann}$ [ erg cm!u-2!n s!u-1!n sr!u-1!n ]', $
+            ytitle='$I_{\rm V}$ [ erg cm!u-2!n s!u-1!n sr!u-1!n ]', $
             linestyle='none', $
             xrange=[0,dann_max],yra=[0,dv_max],xmin=4, $
             errorbar_thick=th)
@@ -193,9 +197,12 @@ print,format='("Max difference (fit - Venus_int): ",f4.1,"%")',max(abs(perc_diff
 print,format='("Standard deviation (fit - Venus_int): ",f4.1,"%")',stdev(perc_diff)
 ;
 ; I set the c[0] value for the AIA line to be the same as EIS.
+; Only overplot this line for 195.
 ;
+IF imin EQ 0 THEN BEGIN 
 q3=plot(/overplot,_extra=extra,x,c[0]+0.1063*x, $
         color=color_toi(/vibrant,'magenta'),linestyle='--')
+ENDIF 
 
 ; If a wavelength other than 195 is plotted, then plot the fit to the 195 line.
 ;
@@ -214,8 +221,10 @@ lbl=trim(floor(wvl))
 
 
 outfile='plot_eis_venus_ints_'+lbl+'.png'
-w.save,outfile,resolution=2*xdim
+w.save,outfile,width=2*xdim
 message,/info,/cont,'Plot sent to the file '+outfile+'.'
+
+
 
 return,w
 

@@ -8,6 +8,10 @@ FUNCTION plot_eis_image
 ;   in the Venus transit paper.
 ;
 ; PRY, 26-Apr-2022
+;
+; MODIFICATION HISTORY:
+;     Ver.2, 30-Jun-2022, Peter Young
+;       Updated axis labels.
 ;-
 
 
@@ -52,7 +56,9 @@ p=plot_map_obj(map,/current,/log,rgb_table=aia_rgb_table(193), $
                dim=[300,500],_extra=extra, $
                title='',dmin=p_dmin, $
                xtickdir=1,ytickdir=1, $
-               pos=[x0+ddx,y0,x0+dx,y1],xminor=0)
+               pos=[x0+ddx,y0,x0+dx,y1],xminor=0, $
+               xtitle='solar-x [ arcsec ]', $
+               ytitle='solar-y [ arcsec ]')
 ;               pos=[0.2,0.09,0.95,0.98])
 
 t=text(/data,-275,750,font_size=fs,'(a)!cEIS!cFe XII !9l!3195.12!c00:39-00:41 UT',color='white')
@@ -66,7 +72,7 @@ q=image(/current,img, $
         pos=[x0+ddx+dx,y0,x0+2*dx,y1], $
         _extra=extra, $
         xmin=1,xtickdir=1,ytickdir=1, $
-       xtitle='X-pixel',ytitle='Y-pixel')
+       xtitle='x-pixel',ytitle='y-pixel')
 
 xp=8 & yp=48
 qb=plot(/overplot,xp+[0,20,20,0,0],yp+[0,0,20,20,0],th=th,color='white')
