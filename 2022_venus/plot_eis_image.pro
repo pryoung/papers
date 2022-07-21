@@ -12,6 +12,8 @@ FUNCTION plot_eis_image
 ; MODIFICATION HISTORY:
 ;     Ver.2, 30-Jun-2022, Peter Young
 ;       Updated axis labels.
+;     Ver.3, 21-Jul-2022, Peter Young
+;       Added exposure labels on panel (a), and label on panel (b).
 ;-
 
 
@@ -61,7 +63,19 @@ p=plot_map_obj(map,/current,/log,rgb_table=aia_rgb_table(193), $
                ytitle='solar-y [ arcsec ]')
 ;               pos=[0.2,0.09,0.95,0.98])
 
-t=text(/data,-275,750,font_size=fs,'(a)!cEIS!cFe XII !9l!3195.12!c00:39-00:41 UT',color='white')
+xr=p.xrange
+yr=p.yrange
+
+pt=text(/data,0.9*xr[0]+0.1*xr[1],0.95*yr[1]+0.05*yr[0], $
+       font_size=fs,'(a)!cEIS!cFe XII !9l!3195.12!c00:39-00:41 UT', $
+        color='white',vertical_align=1.0)
+
+dsx=(xr[1]-xr[0])/6.
+px=findgen(6)*dsx+xr[0]+dsx/2.
+
+FOR i=0,5 DO pt2=text(/data,px[i],350,trim(6-i),align=0.5, $
+                      font_size=fs,color='black')
+
 
 wd=eis_getwindata(file,195.12)
 img=reform(wd.int[*,3,*])
@@ -73,6 +87,14 @@ q=image(/current,img, $
         _extra=extra, $
         xmin=1,xtickdir=1,ytickdir=1, $
        xtitle='x-pixel',ytitle='y-pixel')
+
+xr=q.xrange
+yr=q.yrange
+
+qt=text(/data,0.9*xr[0]+0.1*xr[1],0.95*yr[1]+0.05*yr[0], $
+       font_size=fs,'(b)!cExposure 3/6', $
+       color='white',vertical_align=1.0,target=q)
+
 
 xp=8 & yp=48
 qb=plot(/overplot,xp+[0,20,20,0,0],yp+[0,0,20,20,0],th=th,color='white')
