@@ -1,7 +1,7 @@
 
 # Paper: Young & Viall, Scattered light in EIS and AIA datasets
 
-This repository contains files used for data analysis and generating figures. All software are written in IDL. The EIS and AIA Solarsoft libraries are required.
+The article "Scattered light in the Hinode/EIS and SDO/AIA instruments measured from the 2012 Venus transit" by Peter R. Young & Nicholeen M. Viall was accepted for publication in the Astrophysical Journal in July 2022. This repository contains files used for data analysis and generating figures. All software are written in IDL. The EIS and AIA Solarsoft libraries are required.
 
 ## AIA data analysis
 
@@ -42,13 +42,14 @@ There are 20 files for this particular pointing, and eis_venus_select is called 
 The results can be read into a structure with
 
 ```
-d=read_eis_venus_results()
+d=read_eis_venus_results('results_195.txt',195.12)
 ```
 
-The plot used for the paper was generated with:
+The plots used for the paper (for Fe XII 195 and Fe XIV 274) were generated with:
 
 ```
-p=plot_eis_venus_ints()
+p=plot_eis_venus_ints('results_195.txt',195.12)
+p=plot_eis_venus_ints('results_274.txt',274.20)
 ```
 
 ## Full-disk scaling for EIS data
@@ -62,29 +63,11 @@ Section 6 ("EIS data analysis") of the paper contains Table 2, which gives the A
 You will need level-1 versions of the three EIS files for this to work.
 
 
-## Orbital twilight corrections
 
-The slot sequences beginning at 06/03:23 and 06/05:01 began during orbital twilight and so the intensities are suppressed. This was corrected by using a uniform intensity area of the slot raster maps and then comparing the intensity in the early rasters with those of the later rasters. Correction factors were obtained with the routine eis_eclipse_raster. The corrections only apply to the first two files in the sequence.
-
-### 06/03:23
-```
-file=eis_find_file('6-jun-2012 03:30',/lev,/seq)
-eis_eclipse_scale,file,yrange=[300,370]
-File:  0   Ratios:      0.812     0.272
-File:  1   Ratios:      0.983     0.965
-```
-
-### 06/05:01
-```
-file=eis_find_file('6-jun-2012 05:10',/lev,/seq)
-eis_eclipse_scale,file,yrange=[270,320]
-File:  0   Ratios:      0.704     0.139
-File:  1   Ratios:      0.975     0.929
-```
 
 ## Figures
 
-### Figure 1 - plot_aia_venus.png
+### Figure 1 - plot_aia_venus.jpg
 
 Shows track of Venus on AIA 193 image.
 
@@ -116,12 +99,12 @@ Two panel plot showing slot raster image of Venus (left) and close-up of the Ven
 w=plot_eis_image()
 ````
 
-### Figure 5 - plot_eis_venus_ints.png
+### Figure 5 - plot_eis_venus_ints_195.png
 
 Two panel plot similar to Figure 2, but for EIS.
 
 ````
-w=plot_eis_venus_ints()
+w=plot_eis_venus_ints('results_195.txt',195.12)
 ````
 
 ### Figure 6 - plot_20161123_regions.png
@@ -132,7 +115,23 @@ Shows an EIS raster with locations used for coronal hole and quiet Sun.
 w=plot_20161123_regions()
 ````
 
-### Figure 7 - plot_aia_ann_rad_comparison.png
+### Figure 7 - plot_eis_venus_ints_274.png
+
+Same as Figure 5, but for Fe XIV 274.20.
+
+````
+w=plot_eis_venus_ints('results_274.txt',274.20)
+````
+
+### Figure 8 - plot_annulus_193_304_comparison.png
+
+Plot showing results of convolving synthetic annulus images for AIA 193 and 304 with the Grigis PSF.
+
+````
+w=plot_annulus_193_304_comparison()
+````
+
+### Figure 9 - plot_aia_ann_rad_comparison.png
 
 This is a 2x2 panel plot showing the effect of varying the annulus radius.
 
@@ -140,9 +139,17 @@ This is a 2x2 panel plot showing the effect of varying the annulus radius.
 w=plot_aia_ann_rad_comparison()
 ```
 
+### Figure 10 - plot_ar_model.png
+
+Two panel plot showing a 193 image from 14-Feb-2011 on the left and a model on the right of how this scenario is simulated.
+
+````
+w=plot_ar_model()
+````
+
 ## AIA files
 
-The following is the list of 32 AIA 193 files that were used for the AIA analysis. They can be downloaded from the JSOC of VSO. In order to use the routine `aia_get_venus` you should put these files in the sub-directory `/aia`.
+The following is the list of 32 AIA 193 files that were used for the AIA analysis. They can be downloaded from the JSOC or VSO. In order to use the routine `aia_get_venus` you should put these files in the sub-directory `/aia`.
 
 ```
 aia.lev1.193A_2012-06-05T21_00_07.84Z.image_lev1.fits
