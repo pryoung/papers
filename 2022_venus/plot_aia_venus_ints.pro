@@ -50,6 +50,8 @@ FUNCTION plot_aia_venus_ints, no_psf=no_psf, quadratic=quadratic
 ;       Added intensity uncertainties from d050x_err structure.
 ;     Ver.4 30-Jun-2022, Peter Young
 ;       Updated axis labels.
+;     Ver.5, 27-Jul-2022, Peter Young
+;       Another slight change to axis label.
 ;-
 
 
@@ -96,7 +98,7 @@ i_out_1=where(d050x.r GE 960. AND swtch EQ 1)
 
 p=plot(/current,d050x[i_in_0].x,d050x[i_in_0].int,symbol='+', $
        _extra=extra, $
-       xtitle='solar-X [ arcsec ]', $
+       xtitle='solar-x [ arcsec ]', $
        ytitle='$D_{\rm V}$ [ DN s!u-1!n pix!u-1!n ]', $
        pos=[x0+ddx,y0,x0+dx,y1],linestyle='none', $
        xrange=[-1300,1300],/xsty, $

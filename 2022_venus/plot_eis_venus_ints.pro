@@ -120,7 +120,7 @@ i_circle=where(r GE 960.,n_circle)
 
 p=plot(/current,d[i_cross].x,d[i_cross].int_venus,symbol='+', $
        _extra=extra, $
-       xtitle='solar-X [ arcsec ]', $
+       xtitle='solar-x [ arcsec ]', $
        ytitle='$I_{\rm V}$ [ erg cm!u-2!n s!u-1!n sr!u-1!n ]', $
        pos=[x0+ddx,y0,x0+dx,y1],linestyle='none', $
        xrange=[-1300,1300],/xsty, $
