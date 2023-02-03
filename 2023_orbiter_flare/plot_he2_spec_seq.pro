@@ -1,12 +1,46 @@
 
 
-FUNCTION plot_he2_spec_seq, wd=wd
+FUNCTION plot_he2_spec_seq, wd=wd, no_median=no_median
 
-; a multi-panel plot showing time evolution of He II spectra.
+;+
+; NAME:
+;     PLOT_HE2_SPEC_SEQ
+;
+; PURPOSE:
+;     Creates a large figure containing two sets of 3x2 plots. The set
+;     on the left are consecutive spectral exposures from the EIS He II
+;     256 line. The set on the right are the nearest-in-time AIA 304
+;     images corresponding to the EIS exposures, set to have the same
+;     y-range.
+;
+; OPTIONAL INPUTS:
+;     Wd:   The windata structure for He II 256. If this is undefined when
+;           calling the routine, then structure is returned and can be
+;           used in the following call.
+;
+; KEYWORD PARAMETERS:
+;     R: If set, then a GOES curve is over-plotted. (Not used in
+;           final paper.)
+;     No_Median_Replace: There are a number of pixels that are missing in
+;                the EIS exposures and they are replaced with median values.
+;                To keep the original missing pixels, set the
+;                /no_median_replace keyword.
+;
+; OUTPUTS:
+;     Creates the image plot_he2_spec_seq.jpg in the working directory
+;     and returns an IDL plot object
+;
+; MODIFICATION HISTORY:
+;     Ver.1, 03-Feb-2023, Peter Young
+;-
 
 
 IF n_tags(wd) EQ 0 THEN BEGIN 
-  file=eis_find_file('2-apr-2022 13:54',/lev,/seq)
+  file=eis_find_file('2-apr-2022 13:54',/lev,/seq,count=count)
+  IF count EQ 0 THEN BEGIN
+    message,/cont,/info,'Please download the EIS file 20220402_130542 and calibrate it to level-1 before using this routine. Returning...'
+    return,-1
+  ENDIF 
   wd=eis_getwindata(file[0],256.32,/refill)
 ENDIF
 
@@ -65,9 +99,11 @@ FOR i=0,n-1 DO BEGIN
  ;
  ; Smooth over missing pixels for display purposes
  ;
-  med_img=fmedian(img,3,7)
-  k=where(img EQ wd.missing,nk)
-  IF nk NE 0 THEN img[k]=med_img[k]
+  IF ~ keyword_set(replace_missing) THEN BEGIN 
+    med_img=fmedian(img,3,7)
+    k=where(img EQ wd.missing,nk)
+    IF nk NE 0 THEN img[k]=med_img[k]
+  ENDIF 
  ;
   img=alog10(img>dmin<dmax)
   p=image(img,v,yax,axis_sty=2,rgb_table=3, $

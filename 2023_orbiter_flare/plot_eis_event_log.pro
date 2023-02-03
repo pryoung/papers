@@ -1,6 +1,6 @@
 
 
-FUNCTION plot_eis_event_log, goes=goes, wd=wd
+FUNCTION plot_eis_event_log, goes=goes, wd=wd, no_interp=no_interp
 
 ;+
 ; NAME:
@@ -18,6 +18,9 @@ FUNCTION plot_eis_event_log, goes=goes, wd=wd
 ; KEYWORD PARAMETERS:
 ;     GOES: If set, then a GOES curve is over-plotted. (Not used in
 ;           final paper.)
+;     NO_INTERP: Two of the data columns are missing in the data and they
+;                are interpolated to make the displayed image look prettier.
+;                Setting this keyword restores the missing columns.
 ;
 ; OUTPUTS:
 ;     Creates the image plot_eis_event_log.jpg in the working directory
@@ -58,11 +61,13 @@ xax=image_fix_axis(t1_jd)
 yax=wd.solar_y+xy[1]+15.0
 
 ;
-; do interpolation for missing data
+; Do interpolation for missing data
 ;
-int1[15,*]=average(int1[[14,16],*],1,missing=wd.missing)
-int1[72,*]=average(int1[[71,73],*],1,missing=wd.missing)
-
+IF ~ keyword_set(no_interp) THEN BEGIN 
+  int1[15,*]=average(int1[[14,16],*],1,missing=wd.missing)
+  int1[72,*]=average(int1[[71,73],*],1,missing=wd.missing)
+ENDIF 
+  
 ;
 ; Take square root and invert image.
 ;
