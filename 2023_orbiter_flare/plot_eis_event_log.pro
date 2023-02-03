@@ -94,7 +94,7 @@ w=window(dim=[xdim,ydim])
 
 
 p=image(int1,xax,yax,rgb_table=aia_rgb_table(304),axis_style=2, $
-        pos=[0.12,0.12,0.98,0.98], $
+        pos=[0.11,0.12,0.97,0.98], $
         xtickunits='time',XTICKFORMAT='(C(CHI2.2,":",CMI2.2))', $
         ytitle='solar-y / arcsec', $
         xtitle='time [ 2-Apr-2022 hh:mm ]', $

@@ -1,6 +1,6 @@
 
 
-FUNCTION plot_he2_spec_seq, wd=wd, no_median=no_median
+FUNCTION plot_he2_spec_seq, wd=wd, no_median_replace=no_median_replace
 
 ;+
 ; NAME:
@@ -19,8 +19,6 @@ FUNCTION plot_he2_spec_seq, wd=wd, no_median=no_median
 ;           used in the following call.
 ;
 ; KEYWORD PARAMETERS:
-;     R: If set, then a GOES curve is over-plotted. (Not used in
-;           final paper.)
 ;     No_Median_Replace: There are a number of pixels that are missing in
 ;                the EIS exposures and they are replaced with median values.
 ;                To keep the original missing pixels, set the
@@ -99,7 +97,7 @@ FOR i=0,n-1 DO BEGIN
  ;
  ; Smooth over missing pixels for display purposes
  ;
-  IF ~ keyword_set(replace_missing) THEN BEGIN 
+  IF ~ keyword_set(no_median_replace) THEN BEGIN 
     med_img=fmedian(img,3,7)
     k=where(img EQ wd.missing,nk)
     IF nk NE 0 THEN img[k]=med_img[k]

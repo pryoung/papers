@@ -1,9 +1,39 @@
 
 
+FUNCTION plot_he2_twist, wd=wd
+
+
+;+
+; NAME:
+;     PLOT_HE2_TWIST
+;
+; PURPOSE:
+;     Shows the He II 256 line profile as a function of y for an exposure
+;     where "twist" is apparent in the Doppler pattern.
+;
+; OPTIONAL INPUTS:
+;     Wd:   The windata structure for He II 256. If this is undefined when
+;           calling the routine, then structure is returned and can be
+;           used in the following call.
+;
+; OUTPUTS:
+;     Creates the image plot_he2_twist.jpg in the working
+;     directory and returns an IDL plot object.
+;
+; MODIFICATION HISTORY:
+;     Ver.1, 03-Feb-2023, Peter Young
+;-
+
+
 IF n_tags(wd) EQ 0 THEN BEGIN 
-  file=eis_find_file('2-apr-2022 13:30',/lev)
+  file=eis_find_file('2-apr-2022 13:54',/lev,count=count)
+  IF count EQ 0 THEN BEGIN
+    message,/cont,/info,'Please download the EIS file 20220402_130542 and calibrate it to level-1 before using this routine. Returning...'
+    return,-1
+  ENDIF 
   wd=eis_getwindata(file,256.32,/refill)
 ENDIF
+
 
 iy0=50
 iy1=94
@@ -46,6 +76,8 @@ pltxt=text(-470,270,/data,'blueshifted!cfilament plasma',font_size=fs, $
            color='dodger blue')
 
 w.save,'plot_he2_twist.jpg',width=2*xdim
+
+return,w
 
 END
 
