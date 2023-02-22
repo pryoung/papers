@@ -146,7 +146,8 @@ FOR i=0,n-1 DO BEGIN
   map=sdo2map(list[imin])
  ;
   eis_x=(wd.solar_x[i]+xy[0]+8.)
-  xrange=eis_x+[-15,15]
+;  xrange=eis_x+[-15,15]
+  xrange=eis_x+[-7,23]
   yrange=minmax(yax)
   sub_map,map,smap,xra=xrange,yra=yrange
  ;
