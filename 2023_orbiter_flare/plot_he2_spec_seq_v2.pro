@@ -1,0 +1,185 @@
+
+
+FUNCTION plot_he2_spec_seq_v2, wd=wd, no_median_replace=no_median_replace
+
+;+
+; NAME:
+;     PLOT_HE2_SPEC_SEQ_V2
+;
+; PURPOSE:
+;     Creates a figure containing two sets of 3x1 plots. The set
+;     on the left are consecutive spectral exposures from the EIS He II
+;     256 line. The set on the right are the nearest-in-time AIA 304
+;     images corresponding to the EIS exposures, set to have the same
+;     y-range.
+;
+; OPTIONAL INPUTS:
+;     Wd:   The windata structure for He II 256. If this is undefined when
+;           calling the routine, then structure is returned and can be
+;           used in the following call.
+;
+; KEYWORD PARAMETERS:
+;     No_Median_Replace: There are a number of pixels that are missing in
+;                the EIS exposures and they are replaced with median values.
+;                To keep the original missing pixels, set the
+;                /no_median_replace keyword.
+;
+; OUTPUTS:
+;     Creates the image plot_he2_spec_seq.jpg in the working directory
+;     and returns an IDL plot object
+;
+; MODIFICATION HISTORY:
+;     Ver.1, 22-Feb-2023, Peter Young
+;-
+
+
+IF n_tags(wd) EQ 0 THEN BEGIN 
+  file=eis_find_file('2-apr-2022 13:54',/lev,/seq,count=count)
+  IF count EQ 0 THEN BEGIN
+    message,/cont,/info,'Please download the EIS file 20220402_130542 and calibrate it to level-1 before using this routine. Returning...'
+    return,-1
+  ENDIF 
+  wd=eis_getwindata(file[0],256.32,/refill)
+ENDIF
+
+
+iy0=65
+iy1=124
+
+il0=0
+il1=30
+
+xy=eis_aia_offsets(wd.hdr.date_obs)
+
+lref=256.358
+v=lamb2v(wd.wvl[il0:il1]-lref,lref)
+yax=wd.solar_y[iy0:iy1]+15.+xy[1]
+
+iexp=indgen(3)+58+3
+
+t_tai=anytim2tai(wd.time_ccsds)+wd.exposure_time/2.
+t_ccsds=anytim2utc(/ccsds,t_tai[iexp],/time,/trunc)
+tstr=t_ccsds+' UT'
+eis_tai=t_tai[iexp]
+
+x0=0.06
+x1=0.55
+dx=(x1-x0)/3.
+y0=0.15
+y1=0.98
+dy=(y1-y0)/2.
+
+fs=12
+th=2
+xtl=0.015
+ytl=0.015
+
+xdim=1200
+ydim=370
+w=window(dim=[xdim,ydim])
+
+n=n_elements(iexp)
+
+;
+; Plot EIS images
+; ---------------
+dmin=1000
+dmax=4e4
+FOR i=0,n-1 DO BEGIN
+  ix=i MOD 3
+ ;
+  IF ix EQ 0 THEN yshowtext=1 ELSE yshowtext=0
+  IF ix EQ 1 THEN xtitle='v!dLOS!n / km s!u-1!n' ELSE xtitle=''
+  IF ix EQ 0 THEN ytitle='y / arcsec' ELSE ytitle=''
+  img=reform(wd.int[il0:il1,iexp[i],iy0:iy1])
+ ;
+ ; Smooth over missing pixels for display purposes
+ ;
+  IF ~ keyword_set(no_median_replace) THEN BEGIN 
+    med_img=fmedian(img,3,7)
+    k=where(img EQ wd.missing,nk)
+    IF nk NE 0 THEN img[k]=med_img[k]
+  ENDIF 
+ ;
+  img=alog10(img>dmin<dmax)
+  p=image(img,v,yax,axis_sty=2,rgb_table=3, $
+          pos=[x0+ix*dx,y0,x0+(ix+1)*dx,y1], $
+          /current, min_value=alog10(dmin), max_value=alog10(dmax), $
+          xshowtext=xshowtext,yshowtext=yshowtext, $
+          xth=th,yth=th,font_size=fs, $
+          xtickdir=1, xticklen=xtl, $
+          xtitle=xtitle, ytitle=ytitle, $
+          yticklen=ytl,ytickdir=1,ymin=1)
+  p.scale,1,21.15
+
+ ; The lines below were for checking the centroids of a couple of the filament clumps.
+ ; (not used in final figure).
+;  IF i EQ 0 THEN pv=plot(/overplot,-340*[1,1],p.yrange,th=2,color='dodger blue')
+;  IF i EQ 1 THEN pv=plot(/overplot,-140*[1,1],p.yrange,th=2,color='dodger blue')
+  
+  FOR j=0,1 DO pl=plot(/overplot,p.xrange,(290+j*20)*[1,1],th=th, $
+                       linesty=':',color='white')
+  pt=text(/data,-470,yax[-8],'(E'+trim(i+1)+') '+tstr[i],font_size=fs,color='white',target=p)
+  IF i EQ 0 THEN po=plot(/overplot,-270*[1,1],306*[1,1],symbol='o',sym_thick=2, $
+                         color='dodger blue',sym_size=3)
+ENDFOR
+
+;
+; Now plot AIA images
+; -------------------
+list=file_search('~/data/flares/20220402/jsoc_cutouts/*.304.image.fits')
+list=list[80:149]
+read_sdo,list,index,/use_shared
+
+t_obs_tai=anytim2tai(index.t_obs)
+
+x0=0.60
+x1=0.99
+dx=(x1-x0)/3.
+
+FOR i=0,n-1 DO BEGIN
+  getmin=min(abs(t_obs_tai-eis_tai[i]),imin)
+  map=sdo2map(list[imin])
+ ;
+  eis_x=(wd.solar_x[i]+xy[0]+8.)
+  xrange=eis_x+[-7,23]
+  yrange=minmax(yax)
+  sub_map,map,smap,xra=xrange,yra=yrange
+ ;
+  ix=i MOD 3
+ ;
+  IF ix EQ 0 THEN yshowtext=1 ELSE yshowtext=0
+  IF ix EQ 1 THEN xtitle='x / arcsec' ELSE xtitle=''
+ ;
+  q=plot_map_obj(smap,/log,rgb_table=aia_rgb_table(304), $
+                 pos=[x0+ix*dx,y0,x0+(ix+1)*dx,y1], $
+                 /current,  $
+                 xshowtext=xshowtext,yshowtext=yshowtext, $
+                 xth=th,yth=th,font_size=fs, $
+                 xtickdir=1,ytickdir=1, $
+                 ymin=1,xticklen=xtl,yticklen=ytl, $
+                 xmin=0,xtitle=xtitle, ytitle='', $
+                 xtickvalues=[910,920,930], $
+                 title='')
+  FOR j=0,1 DO ql=plot(/overplot,q.xrange,(290+j*20)*[1,1],th=th, $
+                       linesty=':',color='white')
+  ql1=plot(/overplot,color='dodger blue',th=th+1, $
+           eis_x*[1,1],q.yrange[1]+[0,-3])
+  ql2=plot(/overplot,color='dodger blue',th=th+1, $
+           eis_x*[1,1],q.yrange[0]+[0,3])
+ ;
+  tstr='(A'+trim(i+1)+') '+anytim2utc(/ccsds,t_obs_tai[imin],/time,/trunc)+' UT'
+  qt=text(/data,q.xrange[0]+1.5,yax[-8],tstr,font_size=fs,color='white',target=q)
+ ;
+  IF i EQ 4-3 THEN arr=arrow(/data,[918,922.5]+4,[295,301.5]-6,th=th,color='dodger blue',target=q)
+  IF i EQ 2 THEN arr=arrow(/data,[918,922.5]+9,[295,301.5]-15,th=th,color='dodger blue',target=q)
+  IF i EQ 3-3 THEN po=plot(/overplot,918.7*[1,1],306*[1,1],symbol='o',sym_thick=2, $
+                         color='dodger blue',sym_size=3)
+ENDFOR 
+
+
+w.save,'plot_he2_spec_seq.jpg',width=2*xdim
+
+return,w
+
+END
