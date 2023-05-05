@@ -1,4 +1,4 @@
-This folder contains routines used to generate figures for the article by M. Janvier et al. about the 2-April-2022 flare and CME that was observed by Solar Orbiter. The figures are derived from Hinode/EIS and SDO/AIA, and the article is due to be submitted to the journal Astronomy & Astrophysics.
+This folder contains routines used to generate figures for the article by M. Janvier et al. about the 2-April-2022 flare and CME that was observed by Solar Orbiter. The figures are derived from Hinode/EIS and SDO/AIA, and the article was submitted to the journal Astronomy & Astrophysics in April 2023.
 
 There are five figures (jpeg format), each with their associated IDL routine (.pro). There is also a routine to generate the image frames for a movie.
 
