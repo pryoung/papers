@@ -95,6 +95,9 @@ function aia_get_venus, quick=quick, data=data, sub_arcsec=sub_arcsec, psf=psf, 
 ;     Ver.5, 29-Jun-2022, Peter Young
 ;       Added calculation of int_stdev and dark_stdev, which have
 ;       been added to output structure.
+;     Ver.6, 25-May-2023, Peter Young
+;       Fixed bug whereby data_files wasn't defined if data didn't
+;       exist.
 ;-
 
 
@@ -166,7 +169,9 @@ IF n_tags(data) NE 0 THEN BEGIN
     ENDELSE
     count=n
   ENDFOR 
-ENDIF 
+ENDIF ELSE BEGIN
+  data_files=list
+ENDELSE 
 
 str={time: '', $
      int: 0., $

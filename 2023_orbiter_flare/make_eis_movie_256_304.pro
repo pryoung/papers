@@ -35,6 +35,8 @@ PRO make_eis_movie_256_304, wd256=wd256
 ;
 ; MODIFICATION HISTORY:
 ;     Ver.1, 04-May-2023, Peter Young
+;     Ver.2, 05-May-2023, Peter Young
+;       Added labels (a) and (b) to images.
 ;-
 
 
@@ -152,7 +154,7 @@ FOR i=0,n-1 DO BEGIN
   eis_txt=anytim2utc(eis_tai[iexp0+i],/ccsds,/time,/trunc)+' UT'
   pt=text(target=p,-500,p.yrange[0]+3,/data,eis_txt,font_size=fs,color='white')
   pt2=text(target=p,-500,p.yrange[1]-3,vertical_align=1.0, $
-           /data,'EIS, He II 256 '+string(197b),font_size=fs,color='white')
+           /data,'(a) EIS, He II 256 '+string(197b),font_size=fs,color='white')
 
   getmin=min(abs(eis_tai[iexp0+i]-aia_tai),imin)
   s=plot_map_obj(samap[imin],dmin=5,dmax=1000,/log, $
@@ -166,7 +168,7 @@ FOR i=0,n-1 DO BEGIN
   aia_txt=anytim2utc(samap[imin].time,/ccsds,/time,/trunc)+' UT'
   st=text(target=s,/data,s.xrange[1]-5,align=1,s.yrange[0]+3,aia_txt,font_size=fs,color='white')
   st2=text(target=s,/data,s.xrange[1]-5,align=1,s.yrange[1]-3,vertical_align=1.0, $
-           'AIA 304 '+string(197b)+' (He II)',font_size=fs,color='white')
+           '(b) AIA 304 '+string(197b)+' (He II)',font_size=fs,color='white')
   
   
   outfile='image'+strpad(trim(count),4,fill='0')+'.jpg'
