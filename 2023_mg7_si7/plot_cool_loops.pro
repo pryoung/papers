@@ -30,6 +30,8 @@ FUNCTION plot_cool_loops
 ;
 ; MODIFICATION HISTORY:
 ;     Ver.1, 21-Sep-2023, Peter Young
+;     Ver.2, 22-Sep-2023, Peter Young
+;       Modified axis labels; changed the offset between AIA and EIS.
 ;-
 
 
@@ -63,7 +65,9 @@ p=plot_map_obj(smap,rgb_table=aia_rgb_table(171),/log,dmin=100, $
                xth=th,yth=th,font_size=fs, $
                xticklen=0.015,yticklen=0.015, $
                xtickdir=1,ytickdir=1, $
-               xmin=1,ymin=1)
+               xmin=1,ymin=1, $
+               xtitle='solar-x / arcsec', $
+               ytitle='solar-y / arcsec')
 pt=text(/data,-280,-435,'(a) AIA 171 '+string(197b)+', 11:50 UT',color='white', $
         font_size=fs)
 
@@ -76,8 +80,11 @@ IF count EQ 0 THEN BEGIN
 ENDIF 
 restore,eis_file
 
+;
+; I'm shifting the EIS map to give better spatial agreement with AIA.
+; 
 map2range,map,xrange=xra,yrange=yra
-dx=10
+dx=15
 dy=-10
 xra=xra+dx
 yra=yra+dy
@@ -91,13 +98,21 @@ p2=plot(/overplot, $
         th=th,color='dodger blue')
 
 ;--
+;
+; The lines below interpolate over three missing data columns
+;
+map.data[55,*]=0.67*map.data[56,*]+0.33*map.data[52,*]
+map.data[54,*]=0.5*map.data[56,*]+0.5*map.data[52,*]
+map.data[53,*]=0.33*map.data[56,*]+0.67*map.data[52,*]
+
 q=plot_map_obj(map,rgb_table=aia_rgb_table(193), $
                pos=[0.675,y0,0.98,y1],/current, $
                title='', $
                xth=th,yth=th,font_size=fs, $
                xticklen=0.015,yticklen=0.015, $
                xtickdir=1,ytickdir=1, $
-               xmin=1,ymin=1,ytitle='')
+               xmin=1,ymin=1,ytitle='', $
+               xtitle='solar-x / arcsec')
 qt=text(/data,-50+dx,-500+dy,'(b) EIS, Si VII 275.37 '+string(197b)+'!c      11:26 UT',color='white', $
         font_size=fs,target=q,vertical_align=1.0)
 
