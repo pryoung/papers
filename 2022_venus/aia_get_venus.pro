@@ -98,6 +98,10 @@ function aia_get_venus, quick=quick, data=data, sub_arcsec=sub_arcsec, psf=psf, 
 ;     Ver.6, 25-May-2023, Peter Young
 ;       Fixed bug whereby data_files wasn't defined if data didn't
 ;       exist.
+;     Ver.7, 17-Oct-2023, Peter Young
+;       Adjusted how the initial estimate of the Venus position is
+;       made so that it works with any set of images; increased
+;       font size of graphic and updated the title.
 ;-
 
 
@@ -131,8 +135,17 @@ ENDIF
 
 IF n_elements(sub_arcsec) EQ 0 THEN sub_arcsec=200.
 
+;
+; These give the coordinates of Venus at a reference time. These are
+; used to give an initial guess for the position of Venus.
+;
+t0='5-jun-2012 21:00:07'
+t0_tai=anytim2tai(t0)
 x0=-1017
 y0=691
+;
+t1='6-jun-2012 05:40:07'
+t1_tai=anytim2tai(t1)
 x1=1082
 y1=442
 
@@ -145,8 +158,8 @@ FOR i=0,count-1 DO BEGIN
   read_sdo,list[i],index,/use_shared_lib,/silent
   list_tai[i]=anytim2tai(index.t_obs)
 ENDFOR 
-t0_tai=list_tai[0]
-t1_tai=list_tai[-1]
+;; t0_tai=list_tai[0]
+;; t1_tai=list_tai[-1]
 dt_tai=t1_tai-t0_tai
 
 ;
@@ -245,8 +258,11 @@ FOR i=i0,i1 DO BEGIN
    ; The center of Venus is manually selected by the user.
    ;
     plot_image,alog10(smap.data>10), $
-               title=trim(i+1)+'/'+trim(count)+', '+ $
-               anytim2utc(map.time,/ccsds,/time,/trunc)
+               title='Image '+trim(i+1)+'/'+trim(count)+', '+ $
+               anytim2utc(map.time,/ccsds,/time,/trunc)+' UT', $
+               charsize=1.5, $
+               xtitle='pixel', $
+               ytitle='pixel'
     cursor,x,y,/data
     x=round(x) & y=round(y)
     oplot,[x-nb,x+nb,x+nb,x-nb,x-nb],[y-nb,y-nb,y+nb,y+nb,y-nb]
