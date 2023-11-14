@@ -102,6 +102,11 @@ function aia_get_venus, quick=quick, data=data, sub_arcsec=sub_arcsec, psf=psf, 
 ;       Adjusted how the initial estimate of the Venus position is
 ;       made so that it works with any set of images; increased
 ;       font size of graphic and updated the title.
+;     Ver.8, 14-Nov-2023, Peter Young
+;       Now adjusts image scaling for AIA channels with a low intensity
+;       (e.g., 131) ; also sets a color table (no. 3 for high intensity
+;       channels, and no. 5 for low intensity channels).
+;
 ;-
 
 
@@ -257,7 +262,19 @@ FOR i=i0,i1 DO BEGIN
    ;
    ; The center of Venus is manually selected by the user.
    ;
-    plot_image,alog10(smap.data>10), $
+   ; Adjust how image is created depending on how bright the
+   ; channel is.
+   ;
+    dd=sigrange(smap.data,range=r)
+    IF r[1] GT 100. THEN BEGIN
+      dmin=10
+      image=alog10(smap.data>dmin)
+      loadct,3
+    ENDIF ELSE BEGIN
+      image=smap.data>r[0]<r[1]*0.5
+      loadct,5
+    ENDELSE 
+    plot_image,image, $
                title='Image '+trim(i+1)+'/'+trim(count)+', '+ $
                anytim2utc(map.time,/ccsds,/time,/trunc)+' UT', $
                charsize=1.5, $
