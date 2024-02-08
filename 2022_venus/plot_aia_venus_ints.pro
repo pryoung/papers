@@ -1,6 +1,7 @@
 
 
-FUNCTION plot_aia_venus_ints, no_psf=no_psf, quadratic=quadratic
+FUNCTION plot_aia_venus_ints, data, no_psf=no_psf, quadratic=quadratic, $
+                              deconv_data=deconv_data
 
 ;+
 ; NAME:
@@ -20,7 +21,11 @@ FUNCTION plot_aia_venus_ints, no_psf=no_psf, quadratic=quadratic
 ;     Result = PLOT_AIA_VENUS_INTS( )
 ;
 ; INPUTS:
-;     None.
+;     Data:  A structure in the form returned by aia_get_venus.pro.
+;
+; OPTIONAL INPUTS:
+;     Deconv_Data:  A structure in the form returned by aia_get_venus.pro
+;                   but for deconvolved AIA data.
 ;
 ; KEYWORD PARAMETERS:
 ;     NO_PSF:  If set, then the PSF-deconvolved intensity is not
@@ -32,15 +37,11 @@ FUNCTION plot_aia_venus_ints, no_psf=no_psf, quadratic=quadratic
 ;     Creates an IDL plot object and also makes a copy of the object
 ;     to an eps file called 'plot_aia_venus_ints.eps'.
 ;
-; RESTRICTIONS:
-;     Requires the files 'aia_venus_results.save' and
-;     'aia_venus_results_deconvolved.save' to be present in the
-;     working directory.
-;
 ; EXAMPLE:
-;     IDL> w=plot_aia_venus_ints()
-;     IDL> w=plot_aia_venus_ints(/no_psf)
-;     IDL> w=plot_aia_venus_ints(/quadratic)
+;     IDL> w=plot_aia_venus_ints(data)
+;     IDL> w=plot_aia_venus_ints(data, deconv_data=deconv_data)
+;     IDL> w=plot_aia_venus_ints(data,/no_psf)
+;     IDL> w=plot_aia_venus_ints(data,/quadratic)
 ;
 ; MODIFICATION HISTORY:
 ;     Ver.1, 05-Oct-2020, Peter Young
@@ -52,12 +53,34 @@ FUNCTION plot_aia_venus_ints, no_psf=no_psf, quadratic=quadratic
 ;       Updated axis labels.
 ;     Ver.5, 27-Jul-2022, Peter Young
 ;       Another slight change to axis label.
+;     Ver.6, 07-Feb-2024, Peter Young
+;       Added DATA input (to replace save file previously used), and
+;       DECONV_DATA= optional input; modified how xrange and yrange are
+;       computed.
 ;-
 
+;
+; If DATA has not been input, then check if save file exists (this was
+; the old way of running routine).
+; 
+IF n_tags(data) EQ 0 THEN BEGIN
+  chck=file_info('aia_venus_results.save')
+  IF chck.exists EQ 0 THEN message,'DATA was not input and the file aia_venus_results.save does not exist. Returning...',/info,/cont
+  restore,'aia_venus_results.save'
+  data=d050x_err
+ENDIF 
 
-restore,'aia_venus_results.save'
-restore,'aia_venus_results_deconvolved.save'
-dd=ddx
+IF n_tags(deconv_data) EQ 0 THEN BEGIN
+  chck=file_info('aia_venus_results_deconvolved.save')
+  IF chck.exists EQ 1 THEN BEGIN
+    restore,'aia_venus_results_deconvolved.save'
+    deconv_data=dd
+  ENDIF 
+ENDIF 
+
+;restore,'aia_venus_results.save'
+;restore,'aia_venus_results_deconvolved.save'
+;dd=ddx
 
 xdim=1100
 ydim=500
@@ -81,60 +104,62 @@ extra={ thick: th, $
         font_size: fs, $
         yminor: 4}
 
-n=n_elements(d050x)
+n=n_elements(data)
 swtch=bytarr(n)
-t_tai=anytim2tai(d050x.time)
+t_tai=anytim2tai(data.time)
 t_min=round((t_tai-t_tai[0])/60.)
 chck=t_min MOD 20
 k=where(chck NE 0)
 swtch[k]=1b
 
-i_in_0=where(d050x.r LT 960. AND swtch EQ 0)
-i_in_1=where(d050x.r LT 960. AND swtch EQ 1)
-i_in=where(d050x.r LT 960.)
-i_out=where(d050x.r GE 960.)
-i_out_0=where(d050x.r GE 960. AND swtch EQ 0)
-i_out_1=where(d050x.r GE 960. AND swtch EQ 1)
+yrange=[0,max(data.int)*1.1]
 
-p=plot(/current,d050x[i_in_0].x,d050x[i_in_0].int,symbol='+', $
+i_in_0=where(data.r LT 960. AND swtch EQ 0)
+i_in_1=where(data.r LT 960. AND swtch EQ 1)
+i_in=where(data.r LT 960.)
+i_out=where(data.r GE 960.)
+i_out_0=where(data.r GE 960. AND swtch EQ 0)
+i_out_1=where(data.r GE 960. AND swtch EQ 1)
+
+p=plot(/current,data[i_in_0].x,data[i_in_0].int,symbol='+', $
        _extra=extra, $
        xtitle='solar-x [ arcsec ]', $
        ytitle='$D_{\rm V}$ [ DN s!u-1!n pix!u-1!n ]', $
        pos=[x0+ddx,y0,x0+dx,y1],linestyle='none', $
        xrange=[-1300,1300],/xsty, $
-       yrange=[0,60])
-p3=plot(/current,/overplot,d050x[i_in_1].x,d050x[i_in_1].int,symbol='x', $
+       yrange=yrange)
+p3=plot(/current,/overplot,data[i_in_1].x,data[i_in_1].int,symbol='x', $
         _extra=extra,linestyle='none')
-p1=plot(/current,/overplot,d050x[i_out_0].x,d050x[i_out_0].int,symbol='o', $
+p1=plot(/current,/overplot,data[i_out_0].x,data[i_out_0].int,symbol='o', $
         _extra=extra,linestyle='none')
-p4=plot(/current,/overplot,d050x[i_out_1].x,d050x[i_out_1].int,symbol='o', $
+p4=plot(/current,/overplot,data[i_out_1].x,data[i_out_1].int,symbol='o', $
         _extra=extra,sym_filled=1,linestyle='none')
-p2=plot(/overplot,d050x.x,d050x.int,_extra=extra)
+p2=plot(/overplot,data.x,data.int,_extra=extra)
 tp=text(/data,-1150,54,'(a)',font_size=fs+2)
 
 ;
 ; Overplot deconvolved data.
 ;
-IF NOT keyword_set(no_psf) THEN BEGIN 
-  i_in=where(dd.r LT 960.)
-  i_out=where(dd.r GE 960.)
+IF NOT keyword_set(no_psf) AND n_tags(deconv_data) NE 0 THEN BEGIN 
+  i_in=where(deconv_data.r LT 960.)
+  i_out=where(deconv_data.r GE 960.)
  ;
-  d=plot(/overplot,dd.x,dd.int,color=color_toi('cyan',/vibrant), $
+  d=plot(/overplot,deconv_data.x,deconv_data.int,color=color_toi('cyan',/vibrant), $
          _extra=extra)
 ENDIF 
   
 ;-----------------------------
-i_in_0=where(d050x.r LT 960. AND swtch EQ 0)
-i_in_1=where(d050x.r LT 960. AND swtch EQ 1)
-i_in=where(d050x.r LT 960.)
-i_out=where(d050x.r GE 960.)
-i_out_0=where(d050x.r GE 960. AND swtch EQ 0)
-i_out_1=where(d050x.r GE 960. AND swtch EQ 1)
+i_in_0=where(data.r LT 960. AND swtch EQ 0)
+i_in_1=where(data.r LT 960. AND swtch EQ 1)
+i_in=where(data.r LT 960.)
+i_out=where(data.r GE 960.)
+i_out_0=where(data.r GE 960. AND swtch EQ 0)
+i_out_1=where(data.r GE 960. AND swtch EQ 1)
 
-q=errorplot(/current,d050x[i_in_0].sub_map_int, $
-            d050x[i_in_0].int,d050x_err[i_in_0].int_stdev, $
-            symbol='+', $
-            yrange=[0,60], $
+q=errorplot(/current,data[i_in_0].sub_map_int, $
+            data[i_in_0].int,data[i_in_0].int_stdev, $
+            symbol='+',xsty=1, $
+            yrange=yrange, $
             _extra=extra,linestyle='none', $
             pos=[x0+dx+ddx,y0,x0+2*dx,y1] , $
             xtitle='$D_{\rm ann}$ [ DN s!u-1!n pix!u-1!n ]', $
@@ -147,19 +172,21 @@ q=errorplot(/current,d050x[i_in_0].sub_map_int, $
 ;;        xtitle='$D_{\rm ann}$ / DN s!u-1!n pix!u-1!n', $
 ;;        ytitle='$D_{\rm V}$ / DN s!u-1!n pix!u-1!n' , $
 ;;        xminor=4)
-q2=plot(/current,/overplot,d050x[i_in_1].sub_map_int,d050x[i_in_1].int,symbol='x', $
+q2=plot(/current,/overplot,data[i_in_1].sub_map_int,data[i_in_1].int,symbol='x', $
         _extra=extra,linestyle='none')
-q1=plot(/current,/overplot,d050x[i_out_0].sub_map_int,d050x[i_out_0].int,symbol='o', $
+q1=plot(/current,/overplot,data[i_out_0].sub_map_int,data[i_out_0].int,symbol='o', $
         _extra=extra,linestyle='none')
-q4=plot(/current,/overplot,d050x[i_out_1].sub_map_int,d050x[i_out_1].int,symbol='o', $
+q4=plot(/current,/overplot,data[i_out_1].sub_map_int,data[i_out_1].int,symbol='o', $
         _extra=extra,linestyle='none',sym_filled=1)
-;q2=plot(/overplot,d050x.sub_map_int,d050x.int,_extra=extra)
+;q2=plot(/overplot,data.sub_map_int,data.int,_extra=extra)
 tq=text(/data,30,54,'(b)',font_size=fs+2,target=q)
 
-;c=linfit(d050x[i_in].sub_map_int,d050x[i_in].int)
-c=linfit(d050x[i_in].sub_map_int,d050x[i_in].int,meas=d050x_err[i_in].int_stdev, $
+;c=linfit(data[i_in].sub_map_int,data[i_in].int)
+c=linfit(data[i_in].sub_map_int,data[i_in].int,meas=data[i_in].int_stdev, $
          sigma=sigma)
-x=findgen(11)*50.
+xmax=max(data.sub_map_int)*1.1
+x=findgen(11)/10.*xmax
+;x=findgen(11)*50.
 q3=plot(/overplot,th=th+1,x,c[0]+c[1]*x,color=color_toi('cyan',/vibrant))
 
 print,format='("Slope:   ",f10.4," +/-",f10.4)',c[1],sigma[1]
@@ -169,7 +196,7 @@ print,format='("I_ann=0: ",f8.2," +/-",f8.2)',c[0],sigma[0]
 ; This fits a quadratic to all of the data-points
 ;
 IF keyword_set(quadratic) THEN BEGIN 
-  c=poly_fit(d050x.sub_map_int,d050x.int,2)
+  c=poly_fit(data.sub_map_int,data.int,2)
   q4=plot(/overplot,th=th,x,c[0]+c[1]*x+c[2]*x^2,color=color_toi('magenta',/vibrant))
 ENDIF 
 
@@ -189,11 +216,11 @@ y=fltarr(20)-100.
 
 imin_save=500
 FOR i=0,19 DO BEGIN
-  getmin=min(abs(v[i]-d050x.sub_map_int),imin)
+  getmin=min(abs(v[i]-data.sub_map_int),imin)
   k=where(imin EQ imin_save,nk)
   IF nk EQ 0 THEN BEGIN
-    x[i]=d050x[imin].sub_map_int
-    y[i]=d050x[imin].int
+    x[i]=data[imin].sub_map_int
+    y[i]=data[imin].int
   ENDIF 
   imin_save=[imin_save,imin]
 END

@@ -1,7 +1,7 @@
 
 function aia_get_venus, quick=quick, data=data, sub_arcsec=sub_arcsec, psf=psf, radius=radius, $
                         show_annulus=show_annulus, next=next, previous=previous, $
-                        inner_radius=inner_radius
+                        inner_radius=inner_radius, aia_dir=aia_dir
 
 ;+
 ; NAME:
@@ -35,6 +35,10 @@ function aia_get_venus, quick=quick, data=data, sub_arcsec=sub_arcsec, psf=psf, 
 ;             arcsec.
 ;     Inner_Radius: This sets the inner radius. The default is 30
 ;                   arcsec (corresponding to radius of Venus).
+;     Aia_Dir: By default the routine looks for AIA FITS files in the
+;              sub-directory 'aia'. By setting this input you can
+;              directly specify the AIA directory. For example,
+;              aia_dir='~/aia_335'
 ;	
 ; KEYWORD PARAMETERS:
 ;     QUICK:  Only processes three frames. Used for testing.
@@ -106,7 +110,8 @@ function aia_get_venus, quick=quick, data=data, sub_arcsec=sub_arcsec, psf=psf, 
 ;       Now adjusts image scaling for AIA channels with a low intensity
 ;       (e.g., 131) ; also sets a color table (no. 3 for high intensity
 ;       channels, and no. 5 for low intensity channels).
-;
+;     Ver.9, 07-Feb-20224, Peter Young
+;       Added optional input aia_dir=.
 ;-
 
 
@@ -116,15 +121,17 @@ IF (keyword_set(previous) OR keyword_set(next)) AND n_tags(data) EQ 0 THEN BEGIN
   return,-1
 ENDIF 
 
+IF n_elements(aia_dir) EQ 0 THEN aia_dir='aia'
+
 IF keyword_set(psf) THEN BEGIN
-  list=file_search('aia/level16','AIA*.fits',count=count)
+  list=file_search(concat_dir(aia_dir,'level16'),'AIA*.fits',count=count)
 ENDIF ELSE BEGIN 
-  list=file_search('aia','aia.*.fits',count=count)
+  list=file_search(aia_dir,'aia*.fits',count=count)
 ENDELSE 
 
 
 IF count EQ 0 THEN BEGIN
-  message,'No AIA files were found in the /aia sub-directory. Please download the files from JSOC or VSO. The files needed are listed in the README file.',/CONTINUE,/info
+  message,'No AIA files were found in the AIA sub-directory. Please download the files from JSOC or VSO. The files needed are listed in the README file.',/CONTINUE,/info
   return,-1
 ENDIF
 
