@@ -188,9 +188,9 @@ aia.lev1.193A_2012-06-06T05_20_07.84Z.image_lev1.fits
 aia.lev1.193A_2012-06-06T05_40_07.84Z.image_lev1.fits
 ```
 
-#Paper: Young, Kittrell & Viall, Scattered light in five AIA channels
+# Paper: Young, Kittrell & Viall, Scattered light in five AIA channels
 
-##Python software for getting Venus locations
+## Python software for getting Venus locations
 
 For the 2022 analysis, the position of Venus in AIA images was obtained by the user manually selecting the center of Venus in the images. For the new analysis, many more images needed to be processed so the Venus position was obtained from ephemeris software available in SunPy. The Venus positions are output to a text file venus_coords.txt that is then read by the IDL software.
 
@@ -201,7 +201,7 @@ conda activate sunpy
 python venus_coords.py
 ```
 
-##Getting the Venus data with aia_get_venus
+## Getting the Venus data with aia_get_venus
 
 To use the Venus location text file, put it in a directory (e.g., ~/home/venus) and then add the following to your IDL startup file:
 
