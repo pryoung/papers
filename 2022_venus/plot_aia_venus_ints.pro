@@ -1,7 +1,9 @@
 
 
 FUNCTION plot_aia_venus_ints, data, no_psf=no_psf, quadratic=quadratic, $
-                              deconv_data=deconv_data
+                              deconv_data=deconv_data, $
+                              no_cadence_check=no_cadence_check, $
+                              no_offlimb_points=no_offlimb_points
 
 ;+
 ; NAME:
@@ -57,6 +59,12 @@ FUNCTION plot_aia_venus_ints, data, no_psf=no_psf, quadratic=quadratic, $
 ;       Added DATA input (to replace save file previously used), and
 ;       DECONV_DATA= optional input; modified how xrange and yrange are
 ;       computed.
+;     Ver.7, 15-May-2024, Peter Young
+;       Added checks to make sure there are enough plot points for the
+;       "in_1" and "out_1" cases.
+;     Ver.8, 07-Jun-2024, Peter Young
+;       Relaxed the check on the image cadence so that 1 min deviations
+;       are OK.
 ;-
 
 ;
@@ -104,22 +112,28 @@ extra={ thick: th, $
         font_size: fs, $
         yminor: 4}
 
+;
+; Use swtch to identify images that are outside the 20 min cadence
+; of the sequence. I allow deviations of 1 min. 
+;
 n=n_elements(data)
 swtch=bytarr(n)
-t_tai=anytim2tai(data.time)
-t_min=round((t_tai-t_tai[0])/60.)
-chck=t_min MOD 20
-k=where(chck NE 0)
-swtch[k]=1b
+IF NOT keyword_set(no_cadence_check) THEN BEGIN 
+  t_tai=anytim2tai(data.time)
+  t_min=round((t_tai-t_tai[0])/60.)
+  chck=t_min MOD 20
+  k=where(chck GT 1 OR chck GT 18,nk)
+  IF nk GE 1 THEN swtch[k]=1b
+ENDIF 
 
 yrange=[0,max(data.int)*1.1]
 
 i_in_0=where(data.r LT 960. AND swtch EQ 0)
-i_in_1=where(data.r LT 960. AND swtch EQ 1)
+i_in_1=where(data.r LT 960. AND swtch EQ 1,n_in_1)
 i_in=where(data.r LT 960.)
 i_out=where(data.r GE 960.)
 i_out_0=where(data.r GE 960. AND swtch EQ 0)
-i_out_1=where(data.r GE 960. AND swtch EQ 1)
+i_out_1=where(data.r GE 960. AND swtch EQ 1,n_out_1)
 
 p=plot(/current,data[i_in_0].x,data[i_in_0].int,symbol='+', $
        _extra=extra, $
@@ -128,12 +142,12 @@ p=plot(/current,data[i_in_0].x,data[i_in_0].int,symbol='+', $
        pos=[x0+ddx,y0,x0+dx,y1],linestyle='none', $
        xrange=[-1300,1300],/xsty, $
        yrange=yrange)
-p3=plot(/current,/overplot,data[i_in_1].x,data[i_in_1].int,symbol='x', $
-        _extra=extra,linestyle='none')
+IF n_in_1 GT 0 THEN p3=plot(/current,/overplot,data[i_in_1].x,data[i_in_1].int,symbol='x', $
+                            _extra=extra,linestyle='none')
 p1=plot(/current,/overplot,data[i_out_0].x,data[i_out_0].int,symbol='o', $
         _extra=extra,linestyle='none')
-p4=plot(/current,/overplot,data[i_out_1].x,data[i_out_1].int,symbol='o', $
-        _extra=extra,sym_filled=1,linestyle='none')
+IF n_out_1 GT 1 THEN p4=plot(/current,/overplot,data[i_out_1].x,data[i_out_1].int,symbol='o', $
+                             _extra=extra,sym_filled=1,linestyle='none')
 p2=plot(/overplot,data.x,data.int,_extra=extra)
 tp=text(/data,-1150,54,'(a)',font_size=fs+2)
 
@@ -150,11 +164,11 @@ ENDIF
   
 ;-----------------------------
 i_in_0=where(data.r LT 960. AND swtch EQ 0)
-i_in_1=where(data.r LT 960. AND swtch EQ 1)
+i_in_1=where(data.r LT 960. AND swtch EQ 1,n_in_1)
 i_in=where(data.r LT 960.)
 i_out=where(data.r GE 960.)
 i_out_0=where(data.r GE 960. AND swtch EQ 0)
-i_out_1=where(data.r GE 960. AND swtch EQ 1)
+i_out_1=where(data.r GE 960. AND swtch EQ 1,n_out_1)
 
 q=errorplot(/current,data[i_in_0].sub_map_int, $
             data[i_in_0].int,data[i_in_0].int_stdev, $
@@ -172,12 +186,14 @@ q=errorplot(/current,data[i_in_0].sub_map_int, $
 ;;        xtitle='$D_{\rm ann}$ / DN s!u-1!n pix!u-1!n', $
 ;;        ytitle='$D_{\rm V}$ / DN s!u-1!n pix!u-1!n' , $
 ;;        xminor=4)
-q2=plot(/current,/overplot,data[i_in_1].sub_map_int,data[i_in_1].int,symbol='x', $
-        _extra=extra,linestyle='none')
-q1=plot(/current,/overplot,data[i_out_0].sub_map_int,data[i_out_0].int,symbol='o', $
-        _extra=extra,linestyle='none')
-q4=plot(/current,/overplot,data[i_out_1].sub_map_int,data[i_out_1].int,symbol='o', $
-        _extra=extra,linestyle='none',sym_filled=1)
+IF n_in_1 GT 1 THEN q2=plot(/current,/overplot,data[i_in_1].sub_map_int,data[i_in_1].int,symbol='x', $
+                            _extra=extra,linestyle='none')
+IF NOT keyword_set(no_offlimb_points) THEN BEGIN 
+  q1=plot(/current,/overplot,data[i_out_0].sub_map_int,data[i_out_0].int,symbol='o', $
+          _extra=extra,linestyle='none')
+  IF n_out_1 GT 1 THEN q4=plot(/current,/overplot,data[i_out_1].sub_map_int,data[i_out_1].int,symbol='o', $
+                               _extra=extra,linestyle='none',sym_filled=1)
+ENDIF 
 ;q2=plot(/overplot,data.sub_map_int,data.int,_extra=extra)
 tq=text(/data,30,54,'(b)',font_size=fs+2,target=q)
 
