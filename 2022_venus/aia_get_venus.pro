@@ -1,7 +1,8 @@
 
 function aia_get_venus, quick=quick, data=data, sub_arcsec=sub_arcsec, psf=psf, radius=radius, $
                         show_annulus=show_annulus, next=next, previous=previous, $
-                        inner_radius=inner_radius, aia_dir=aia_dir
+                        inner_radius=inner_radius, aia_dir=aia_dir, $
+                        ct_number=ct_number, dmax=dmax, circle=circle
 
 ;+
 ; NAME:
@@ -39,6 +40,9 @@ function aia_get_venus, quick=quick, data=data, sub_arcsec=sub_arcsec, psf=psf, 
 ;              sub-directory 'aia'. By setting this input you can
 ;              directly specify the AIA directory. For example,
 ;              aia_dir='~/aia_335'
+;     Dmax:   Specifies the maximum value to display for the images
+;             (useful for picking out Venus in dark regions).
+;     CT_Number:  IDL color table number to use for plotting.
 ;	
 ; KEYWORD PARAMETERS:
 ;     QUICK:  Only processes three frames. Used for testing.
@@ -112,6 +116,14 @@ function aia_get_venus, quick=quick, data=data, sub_arcsec=sub_arcsec, psf=psf, 
 ;       channels, and no. 5 for low intensity channels).
 ;     Ver.9, 07-Feb-20224, Peter Young
 ;       Added optional input aia_dir=.
+;     Ver.10, 15-May-2024, Peter Young
+;       Added ct_number= and dmax= optional inputs to give greater
+;       control over the plotted images.
+;     Ver.11, 17-Jun-2024, Peter Young
+;       Now uses accurate Venus positions to automatically identify Venus
+;       location (no need for manual input; added /circle option so Venus
+;       intensity is obtained from a circular region rather than a square
+;       (area is same size as square).
 ;-
 
 
@@ -145,7 +157,7 @@ IF keyword_set(quick) THEN BEGIN
   count=3
 ENDIF
 
-IF n_elements(sub_arcsec) EQ 0 THEN sub_arcsec=200.
+IF n_elements(sub_arcsec) EQ 0 THEN sub_arcsec=120.
 
 ;
 ; These give the coordinates of Venus at a reference time. These are
@@ -217,8 +229,19 @@ IF n_tags(data) NE 0 THEN BEGIN
   output.x=data.x
 ENDIF 
 
-
+;
+; The box over which the Venus intensity is averaged has an area
+; (2*nb+1)^2 pixels, which corresponds to 20x20 arcsec^2.
+;
+; For the /circle option, I set the radius of the circle to give
+; the same area as for the square option.
+;
+; Actually I'm increasing circ_pix_radius to 25 to improve
+; statistics for low signal channels.
+;
 nb=16
+circ_pix_radius=(2*float(nb)+1)/sqrt(!pi)
+;circ_pix_radius=25.0
 
 i0=0
 i1=count-1
@@ -236,6 +259,9 @@ ENDIF
 FOR i=i0,i1 DO BEGIN
   map=sdo2map(data_files[i])
  ;
+  xy=aia_get_venus_coords(map.time)
+  IF n_elements(xy) EQ 2 THEN coord_swtch=1b
+ ;
   aia_average_full_disk,map,output=fd_data,radius=1.05,/quiet
   output[i].full_disk_int=fd_data.int
   output[i].full_disk_npix=fd_data.npix
@@ -252,13 +278,18 @@ FOR i=i0,i1 DO BEGIN
   dyp=30
   output[i].dark_stdev=stdev(map.data[dxp-nb:dxp+nb,dyp-nb:dyp+nb])
  ;
-  IF n_tags(data) NE 0 THEN BEGIN
-    xpos=data[i].x
-    ypos=data[i].y
-  ENDIF ELSE BEGIN
-    t_tai=anytim2tai(map.time)
-    xpos=(x1-x0)*(t_tai-t0_tai)/dt_tai + x0
-    ypos=(y1-y0)*(t_tai-t0_tai)/dt_tai + y0
+  IF coord_swtch THEN BEGIN
+    xpos=xy[0]
+    ypos=xy[1]
+  ENDIF ELSE BEGIN 
+    IF n_tags(data) NE 0 THEN BEGIN
+      xpos=data[i].x
+      ypos=data[i].y
+    ENDIF ELSE BEGIN
+      t_tai=anytim2tai(map.time)
+      xpos=(x1-x0)*(t_tai-t0_tai)/dt_tai + x0
+      ypos=(y1-y0)*(t_tai-t0_tai)/dt_tai + y0
+    ENDELSE
   ENDELSE 
  ;
  ; Get sub-map (smap) that is approximately centered on Venus.
@@ -275,25 +306,53 @@ FOR i=i0,i1 DO BEGIN
     dd=sigrange(smap.data,range=r)
     IF r[1] GT 100. THEN BEGIN
       dmin=10
-      image=alog10(smap.data>dmin)
-      loadct,3
+      IF n_elements(dmax) EQ 0 THEN dmax=r[1]
+      image=alog10(smap.data>dmin<dmax)
+      IF n_elements(ct_number) EQ 0 THEN ct_number=3
     ENDIF ELSE BEGIN
       image=smap.data>r[0]<r[1]*0.5
-      loadct,5
-    ENDELSE 
+      IF n_elements(ct_number) EQ 0 THEN ct_number=5
+    ENDELSE
+    loadct,ct_number
     plot_image,image, $
                title='Image '+trim(i+1)+'/'+trim(count)+', '+ $
                anytim2utc(map.time,/ccsds,/time,/trunc)+' UT', $
                charsize=1.5, $
                xtitle='pixel', $
                ytitle='pixel'
-    cursor,x,y,/data
-    x=round(x) & y=round(y)
-    oplot,[x-nb,x+nb,x+nb,x-nb,x-nb],[y-nb,y-nb,y+nb,y+nb,y-nb]
+    s=size(image,/dim)
+    IF coord_swtch THEN BEGIN
+      IF s[0] NE s[1] AND abs(s[1]-s[0]) GT 3 THEN BEGIN
+        print,'*** WARNING: Venus is close to edge of field-of-view ***'
+        print,format='(10x,2i7)',s[0],s[1]
+      ENDIF 
+      x=float(s[0])/2.
+      y=float(s[1])/2.
+    ENDIF ELSE BEGIN 
+      cursor,x,y,/data
+      x=round(x) & y=round(y)
+    ENDELSE
+   ;
     oplot,x+[-30,30]/0.6,y*[1,1]
     oplot,x*[1,1],y+[-30,30]/0.6
-    output[i].int=mean(smap.data[x-nb:x+nb,y-nb:y+nb])
-    output[i].int_stdev=stdev(smap.data[x-nb:x+nb,y-nb:y+nb])
+   ;
+    IF keyword_set(circle) THEN BEGIN
+      ident_x=fltarr(s[0])+1.
+      ident_y=fltarr(s[1])+1.
+      x_arr=findgen(s[0])#ident_y
+      y_arr=ident_x#findgen(s[1])
+      r_arr=sqrt((x_arr-x)^2+(y_arr-y)^2)
+      k=where(r_arr LE circ_pix_radius,nk)
+     ;
+      contour,r_arr,levels=circ_pix_radius,/overplot
+      output[i].int=mean(smap.data[k])
+      output[i].int_stdev=stdev(smap.data[k])
+    ENDIF ELSE BEGIN 
+      oplot,[x-nb,x+nb,x+nb,x-nb,x-nb],[y-nb,y-nb,y+nb,y+nb,y-nb]
+      output[i].int=mean(smap.data[x-nb:x+nb,y-nb:y+nb])
+      output[i].int_stdev=stdev(smap.data[x-nb:x+nb,y-nb:y+nb])
+    ENDELSE 
+   ;
     output[i].time=map.time
     s=size(smap.data,/dim)
     xp=float(s[0])/2.*smap.dx

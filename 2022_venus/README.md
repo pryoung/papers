@@ -1,7 +1,9 @@
 
 # Paper: Young & Viall, Scattered light in EIS and AIA datasets
 
-The article "Scattered light in the Hinode/EIS and SDO/AIA instruments measured from the 2012 Venus transit" by Peter R. Young & Nicholeen M. Viall was accepted for publication in the Astrophysical Journal in July 2022. This repository contains files used for data analysis and generating figures. All software are written in IDL. The EIS and AIA Solarsoft libraries are required.
+The article "Scattered light in the Hinode/EIS and SDO/AIA instruments measured from the 2012 Venus transit" by Peter R. Young & Nicholeen M. Viall was published in ApJ in 2002 (ApJ, 938, 27). This repository contains files used for data analysis and generating figures. All software are written in IDL. The EIS and AIA Solarsoft libraries are required.
+
+See below for software related to the follow-up paper (Young, Kittrell & Viall) that provides scattered light formulae for the AIA channels 131, 171, 193, 211 and 335.
 
 ## AIA data analysis
 
@@ -185,3 +187,40 @@ aia.lev1.193A_2012-06-06T05_00_07.84Z.image_lev1.fits
 aia.lev1.193A_2012-06-06T05_20_07.84Z.image_lev1.fits
 aia.lev1.193A_2012-06-06T05_40_07.84Z.image_lev1.fits
 ```
+
+#Paper: Young, Kittrell & Viall, Scattered light in five AIA channels
+
+##Python software for getting Venus locations
+
+For the 2022 analysis, the position of Venus in AIA images was obtained by the user manually selecting the center of Venus in the images. For the new analysis, many more images needed to be processed so the Venus position was obtained from ephemeris software available in SunPy. The Venus positions are output to a text file venus_coords.txt that is then read by the IDL software.
+
+To create the text file, you will need a set of regular cadence, full-disk AIA 193 images in your working directory spanning 21:00 5-Jun-2012 to 06:00 6-Jun-2012 (I used 20 min cadence). You can then do the following from the Unix command line:
+
+```
+conda activate sunpy
+python venus_coords.py
+```
+
+##Getting the Venus data with aia_get_venus
+
+To use the Venus location text file, put it in a directory (e.g., ~/home/venus) and then add the following to your IDL startup file:
+
+```
+setenv,'VENUS_TRANSIT=~/home/venus'
+```
+
+Download the set of AIA images for the channel you are interested in and put them in, e.g., '~/home/venus/aia/171' (for the 171 channel). Now do:
+
+```
+IDL> d=aia_get_venus(aia_dir='~/home/venus/aia/171',/circle)
+```
+
+For each image, a close-up of Venus will be shown. A large cross shows the predicted location of Venus. A small circle in the center shows the region averaged to yield the D_V intensity.
+
+To plot the results, do
+
+```
+IDL> w=plot_aia_venus_ints(d,/no_cadence_check,/no_offlimb_points)
+```
+
+The parameters of the fit (c_0, c_1)  are written to the screen.

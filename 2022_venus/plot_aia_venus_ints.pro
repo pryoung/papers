@@ -34,6 +34,12 @@ FUNCTION plot_aia_venus_ints, data, no_psf=no_psf, quadratic=quadratic, $
 ;              plotted in the left panel.
 ;     QUADRATIC: If set, then a quadratic fit is performed for the
 ;                right panel, and the curve is over-plotted.
+;     NO_CADENCE_CHECK: By default the routine checks that the data are
+;                at 20 min cadence. Additional points have a different
+;                plot symbol. Setting this keyword means that all points
+;                on the disk have the same symbol.
+;     NO_OFFLIMB_POINTS: If set, then off-limb points are not plotted on
+;                the right-hand panel.
 ;
 ; OUTPUTS:
 ;     Creates an IDL plot object and also makes a copy of the object
@@ -65,6 +71,9 @@ FUNCTION plot_aia_venus_ints, data, no_psf=no_psf, quadratic=quadratic, $
 ;     Ver.8, 07-Jun-2024, Peter Young
 ;       Relaxed the check on the image cadence so that 1 min deviations
 ;       are OK.
+;     Ver.9, 28-Jun-2024, Peter Young
+;       Removed the "alternative fit" section as this does not work for
+;       filters other than 193; updated header.
 ;-
 
 ;
@@ -86,9 +95,6 @@ IF n_tags(deconv_data) EQ 0 THEN BEGIN
   ENDIF 
 ENDIF 
 
-;restore,'aia_venus_results.save'
-;restore,'aia_venus_results_deconvolved.save'
-;dd=ddx
 
 xdim=1100
 ydim=500
@@ -205,8 +211,8 @@ x=findgen(11)/10.*xmax
 ;x=findgen(11)*50.
 q3=plot(/overplot,th=th+1,x,c[0]+c[1]*x,color=color_toi('cyan',/vibrant))
 
-print,format='("Slope:   ",f10.4," +/-",f10.4)',c[1],sigma[1]
-print,format='("I_ann=0: ",f8.2," +/-",f8.2)',c[0],sigma[0]
+print,format='("Slope (c_0):   ",f10.4," +/-",f10.4)',c[1],sigma[1]
+print,format='("I_ann=0 (c_1): ",f8.2," +/-",f8.2)',c[0],sigma[0]
 
 ;
 ; This fits a quadratic to all of the data-points
@@ -219,38 +225,6 @@ ENDIF
 
 p.save,'plot_aia_venus_ints.png',width=2.*xdim
 
-;
-; I've added the following because there is a cluster of points
-; that are quite tightly spaced together. Below I choose a
-; sample that's more evenly spaced (about every 25 in the
-; X-direction) and then fit a line through it. The straight line fit
-; is very similar to the above. I've commented out the plot part.
-;
-v=findgen(20)*25.+25.
-x=fltarr(20)-100.
-y=fltarr(20)-100.
-
-imin_save=500
-FOR i=0,19 DO BEGIN
-  getmin=min(abs(v[i]-data.sub_map_int),imin)
-  k=where(imin EQ imin_save,nk)
-  IF nk EQ 0 THEN BEGIN
-    x[i]=data[imin].sub_map_int
-    y[i]=data[imin].int
-  ENDIF 
-  imin_save=[imin_save,imin]
-END
-k=where(y NE -100.)
-x=x[k]
-y=y[k]
-
-;a=plot(x,y,symbol='+',_extra=extra)
-c=linfit(x,y)
-xx=findgen(11)*50.
-;b=plot(/overplot,xx,c[0]+c[1]*xx,th=th,color=color_toi('cyan',/vibrant))
-print,'Alternative linear fit:'
-print,format='("  Slope:   ",f10.4)',c[1]
-print,format='("  I_ann=0: ",f8.2)',c[0]
 
 return,w
 
